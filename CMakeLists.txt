@@ -6,7 +6,7 @@ include(cmake/enable-experimental-import-std.cmake)
 include(cmake/load-env-file.cmake)
 portal_load_env_file(".env")
 
-file(READ "version" PROJECT_VERSION)
+file(READ "VERSION.txt" PROJECT_VERSION)
 string(STRIP "${PROJECT_VERSION}" PROJECT_VERSION)
 project(
         portal-core
@@ -19,19 +19,21 @@ message(STATUS "Configuring ${PROJECT_NAME} - version: ${PROJECT_VERSION}")
 
 # [CMAKE.SKIP_TESTS]
 option(
-        PORTAL_TEMPLATE_BUILD_TESTS
+        PORTAL_CORE_BUILD_TESTS
         "Enable building tests and test infrastructure. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
         ${PROJECT_IS_TOP_LEVEL}
 )
 
 # [CMAKE.SKIP_EXAMPLES]
 option(
-        PORTAL_TEMPLATE_BUILD_EXAMPLES
+        PORTAL_CORE_BUILD_EXAMPLES
         "Enable building examples. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
         ${PROJECT_IS_TOP_LEVEL}
 )
 
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+
+find_package(Catch2 CONFIG REQUIRED)
 
 file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS "portal/core/*.cpp")
 file(GLOB_RECURSE CORE_MODULES CONFIGURE_DEPENDS "portal/core/*.cppm")
@@ -53,5 +55,32 @@ target_sources(portal-core
 set_target_properties(portal-core PROPERTIES CXX_MODULE_STD ON)
 target_compile_features(portal-core PUBLIC cxx_std_23)
 
+if (WIN32)
+    target_compile_definitions(portal-core PRIVATE _PORTAL_PLATFORM=portal::Platform::Windows)
+elseif (APPLE)
+    target_compile_definitions(portal-core PRIVATE _PORTAL_PLATFORM=portal::Platform::MacOS)
+elseif (UNIX)
+    target_compile_definitions(portal-core PRIVATE _PORTAL_PLATFORM=portal::Platform::Linux)
+else ()
+    message(FATAL_ERROR "Unsupported platform")
+endif ()
+
+target_compile_definitions(portal-core
+        PUBLIC
+        $<BUILD_INTERFACE:$<$<CONFIG:Debug>:PORTAL_DEBUG>>
+        $<BUILD_INTERFACE:$<$<CONFIG:RelWithDebInfo>:PORTAL_DEVELOPMENT>>
+        $<BUILD_INTERFACE:$<$<CONFIG:Release>:PORTAL_DIST>>
+        INTERFACE
+        $<INSTALL_INTERFACE:$<$<CONFIG:Debug>:PORTAL_DEBUG>>
+        $<INSTALL_INTERFACE:$<$<CONFIG:RelWithDebInfo>:PORTAL_DEVELOPMENT>>
+        $<INSTALL_INTERFACE:$<$<CONFIG:Release>:PORTAL_DIST>>
+)
+
+if (PORTAL_CORE_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif ()
+
 add_executable(main main.cpp)
 target_link_libraries(main portal-core)
+set_target_properties(main PROPERTIES CXX_MODULE_STD ON)

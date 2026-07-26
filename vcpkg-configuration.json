@@ -21,6 +21,6 @@
     }
   ],
   "overlay-triplets": [
-    "cmake/overlay-triplets"
+    "cmake/triplets"
   ]
 }

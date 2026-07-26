@@ -31,7 +31,8 @@
       "name": "llvm",
       "inherits": ["base", "ninja-multi"],
       "cacheVariables": {
-        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/llvm-toolchain.cmake"
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/llvm-toolchain.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux-llvm"
       }
     },
     {

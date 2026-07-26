@@ -8,5 +8,4 @@ import portal.core;
 
 int main()
 {
-    std::print("{}", portal::SOME_VALUE);
 }
