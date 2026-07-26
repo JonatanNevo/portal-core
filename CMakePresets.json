@@ -1,0 +1,396 @@
+{
+  "version": 9,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_EXTENSIONS": false,
+        "CMAKE_CXX_STANDARD_REQUIRED": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo;Release",
+        "VCPKG_MANIFEST_FEATURES": "dev"
+      }
+    },
+    {
+      "name": "ninja-multi",
+      "hidden": true,
+      "generator": "Ninja Multi-Config"
+    },
+    {
+      "name": "gcc",
+      "inherits": ["base", "ninja-multi"],
+      "cacheVariables": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/gnu-toolchain.cmake"
+      }
+    },
+    {
+      "name": "llvm",
+      "inherits": ["base", "ninja-multi"],
+      "cacheVariables": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/llvm-toolchain.cmake"
+      }
+    },
+    {
+      "name": "appleclang",
+      "inherits": ["base", "ninja-multi"],
+      "cacheVariables": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/appleclang-toolchain.cmake"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    },
+    {
+      "name": "msvc",
+      "inherits": ["base", "ninja-multi"],
+      "cacheVariables": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/msvc-toolchain.cmake"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "jobs": 0,
+      "targets": [
+        "all_verify_interface_header_sets",
+        "all"
+      ]
+    },
+    {
+      "name": "gcc-debug",
+      "configurePreset": "gcc",
+      "configuration": "Debug",
+      "inherits": "base"
+    },
+    {
+      "name": "gcc-development",
+      "configurePreset": "gcc",
+      "configuration": "RelWithDebInfo",
+      "inherits": "base"
+    },
+    {
+      "name": "gcc-dist",
+      "configurePreset": "gcc",
+      "configuration": "Release",
+      "inherits": "base"
+    },
+    {
+      "name": "llvm-debug",
+      "configurePreset": "llvm",
+      "configuration": "Debug",
+      "inherits": "base"
+    },
+    {
+      "name": "llvm-development",
+      "configurePreset": "llvm",
+      "configuration": "RelWithDebInfo",
+      "inherits": "base"
+    },
+    {
+      "name": "llvm-dist",
+      "configurePreset": "llvm",
+      "configuration": "Release",
+      "inherits": "base"
+    },
+    {
+      "name": "appleclang-debug",
+      "configurePreset": "appleclang",
+      "configuration": "Debug",
+      "inherits": "base"
+    },
+    {
+      "name": "appleclang-development",
+      "configurePreset": "appleclang",
+      "configuration": "RelWithDebInfo",
+      "inherits": "base"
+    },
+    {
+      "name": "appleclang-dist",
+      "configurePreset": "appleclang",
+      "configuration": "Release",
+      "inherits": "base"
+    },
+    {
+      "name": "msvc-debug",
+      "configurePreset": "msvc",
+      "configuration": "Debug",
+      "inherits": "base"
+    },
+    {
+      "name": "msvc-development",
+      "configurePreset": "msvc",
+      "configuration": "RelWithDebInfo",
+      "inherits": "base"
+    },
+    {
+      "name": "msvc-dist",
+      "configurePreset": "msvc",
+      "configuration": "Release",
+      "inherits": "base"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "inherits": "base",
+      "configuration": "Debug",
+      "configurePreset": "gcc"
+    },
+    {
+      "name": "gcc-development",
+      "inherits": "base",
+      "configuration": "RelWithDebInfo",
+      "configurePreset": "gcc"
+    },
+    {
+      "name": "llvm-debug",
+      "inherits": "base",
+      "configuration": "Debug",
+      "configurePreset": "llvm"
+    },
+    {
+      "name": "llvm-development",
+      "inherits": "base",
+      "configuration": "RelWithDebInfo",
+      "configurePreset": "llvm"
+    },
+    {
+      "name": "appleclang-debug",
+      "inherits": "base",
+      "configuration": "Debug",
+      "configurePreset": "appleclang"
+    },
+    {
+      "name": "appleclang-development",
+      "inherits": "base",
+      "configuration": "RelWithDebInfo",
+      "configurePreset": "appleclang"
+    },
+    {
+      "name": "msvc-debug",
+      "inherits": "base",
+      "configuration": "Debug",
+      "configurePreset": "msvc"
+    },
+    {
+      "name": "msvc-development",
+      "inherits": "base",
+      "configuration": "RelWithDebInfo",
+      "configurePreset": "msvc"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "gcc-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc"
+        },
+        {
+          "type": "build",
+          "name": "gcc-debug"
+        },
+        {
+          "type": "test",
+          "name": "gcc-debug"
+        }
+      ]
+    },
+    {
+      "name": "gcc-development",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc"
+        },
+        {
+          "type": "build",
+          "name": "gcc-development"
+        },
+        {
+          "type": "test",
+          "name": "gcc-development"
+        }
+      ]
+    },
+    {
+      "name": "gcc-dist",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc"
+        },
+        {
+          "type": "build",
+          "name": "gcc-dist"
+        }
+      ]
+    },
+    {
+      "name": "llvm-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "llvm"
+        },
+        {
+          "type": "build",
+          "name": "llvm-debug"
+        },
+        {
+          "type": "test",
+          "name": "llvm-debug"
+        }
+      ]
+    },
+    {
+      "name": "llvm-development",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "llvm"
+        },
+        {
+          "type": "build",
+          "name": "llvm-development"
+        },
+        {
+          "type": "test",
+          "name": "llvm-development"
+        }
+      ]
+    },
+    {
+      "name": "llvm-dist",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "llvm"
+        },
+        {
+          "type": "build",
+          "name": "llvm-dist"
+        }
+      ]
+    },
+    {
+      "name": "appleclang-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "appleclang"
+        },
+        {
+          "type": "build",
+          "name": "appleclang-debug"
+        },
+        {
+          "type": "test",
+          "name": "appleclang-debug"
+        }
+      ]
+    },
+    {
+      "name": "appleclang-development",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "appleclang"
+        },
+        {
+          "type": "build",
+          "name": "appleclang-development"
+        },
+        {
+          "type": "test",
+          "name": "appleclang-development"
+        }
+      ]
+    },
+    {
+      "name": "appleclang-dist",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "appleclang"
+        },
+        {
+          "type": "build",
+          "name": "appleclang-dist"
+        }
+      ]
+    },
+    {
+      "name": "msvc-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "msvc"
+        },
+        {
+          "type": "build",
+          "name": "msvc-debug"
+        },
+        {
+          "type": "test",
+          "name": "msvc-debug"
+        }
+      ]
+    },
+    {
+      "name": "msvc-development",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "msvc"
+        },
+        {
+          "type": "build",
+          "name": "msvc-development"
+        },
+        {
+          "type": "test",
+          "name": "msvc-development"
+        }
+      ]
+    },
+    {
+      "name": "msvc-dist",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "msvc"
+        },
+        {
+          "type": "build",
+          "name": "msvc-dist"
+        }
+      ]
+    }
+  ]
+}

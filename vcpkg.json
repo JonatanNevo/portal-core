@@ -1,0 +1,51 @@
+{
+  "name": "portal-framework",
+  "version-string": "1.0.0",
+  "description": "Base module for the Portal framework.",
+  "builtin-baseline": "2b65c20fc66eda893aa15a15a453c3cf09500b19",
+  "dependencies": [
+    {
+      "name": "llvm-adt",
+      "version>=": "0.2.0"
+    },
+    {
+      "name": "glm",
+      "version>=": "1.0.2"
+    },
+    {
+      "name": "spdlog",
+      "version>=": "1.16.0"
+    },
+    {
+      "name": "enchantum",
+      "version>=": "0.4.0"
+    },
+    {
+      "name": "frozen",
+      "version>=": "1.2.0"
+    },
+    {
+      "name": "concurrentqueue",
+      "version>=": "1.0.4"
+    },
+    {
+      "name": "nativefiledialog-extended",
+      "version>=": "1.2.1"
+    }
+  ],
+  "features": {
+    "dev": {
+      "description": "Builds the framework with additional dependencies for development purposes.",
+      "dependencies": [
+        {
+          "name": "catch2",
+          "version>=": "3.11.0"
+        },
+        {
+          "name": "tracy",
+          "version>=": "0.13.1"
+        }
+      ]
+    }
+  }
+}
