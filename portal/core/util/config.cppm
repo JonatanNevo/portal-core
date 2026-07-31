@@ -3,7 +3,11 @@
 // Distributed under the MIT license (see LICENSE file).
 //
 
-export module portal.core:config;
+module;
+
+#include "portal/core/core_includes.h"
+
+export module portal.core.util:config;
 
 export namespace portal
 {
@@ -14,7 +18,13 @@ enum class Platform
     Linux
 };
 
-constexpr auto PORTAL_PLATFORM = _PORTAL_PLATFORM;
+#if defined(PORTAL_PLATFORM_WINDOWS)
+constexpr auto PORTAL_PLATFORM = portal::Platform::Windows;
+#elif defined(PORTAL_PLATFORM_MACOS)
+constexpr auto PORTAL_PLATFORM = portal::Platform::MacOS;
+#elif defined(PORTAL_PLATFORM_LINUX)
+constexpr auto PORTAL_PLATFORM = portal::Platform::Linux;
+#endif
 
 enum class Compiler
 {
@@ -23,14 +33,24 @@ enum class Compiler
     MSVC
 };
 
-#if defined(__GNUC__)
-#if defined(__clang__)
+enum class Architecture
+{
+    Arm,
+    x86
+};
+
+#if defined(PORTAL_COMPILER_CLANG)
 constexpr auto PORTAL_COMPILER = Compiler::Clang;
-#else
+#elif defined(PORTAL_COMPILER_GCC)
 constexpr auto PORTAL_COMPILER = Compiler::GCC;
-#endif
-#elif defined(_MSC_VER)
+#elif defined(PORTAL_COMPILER_MSVC)
 constexpr auto PORTAL_COMPILER = Compiler::MSVC;
+#endif
+
+#if defined(PORTAL_ARCHITECTURE_X86)
+constexpr auto PORTAL_ARCHITECTURE = portal::Architecture::x86;
+#elif defined(PORTAL_ARCHITECTURE_ARM)
+constexpr auto PORTAL_ARCHITECTURE = portal::Architecture::Arm;
 #endif
 
 
@@ -46,7 +66,7 @@ enum class BuildConfiguration
 constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Debug;
 #elif defined(PORTAL_DEVELOPMENT)
 constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Development;
-#elif defined(PORTAL_DIST
+#elif defined(PORTAL_DIST)
 constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Dist;
 #else
 #error Undefined configuration

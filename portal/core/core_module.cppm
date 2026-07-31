@@ -5,5 +5,5 @@
 
 export module portal.core;
 
-export import :config;
 export import portal.core.util;
+export import portal.core.concurrency;

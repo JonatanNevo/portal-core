@@ -55,16 +55,6 @@ target_sources(portal-core
 set_target_properties(portal-core PROPERTIES CXX_MODULE_STD ON)
 target_compile_features(portal-core PUBLIC cxx_std_23)
 
-if (WIN32)
-    target_compile_definitions(portal-core PRIVATE _PORTAL_PLATFORM=portal::Platform::Windows)
-elseif (APPLE)
-    target_compile_definitions(portal-core PRIVATE _PORTAL_PLATFORM=portal::Platform::MacOS)
-elseif (UNIX)
-    target_compile_definitions(portal-core PRIVATE _PORTAL_PLATFORM=portal::Platform::Linux)
-else ()
-    message(FATAL_ERROR "Unsupported platform")
-endif ()
-
 target_compile_definitions(portal-core
         PUBLIC
         $<BUILD_INTERFACE:$<$<CONFIG:Debug>:PORTAL_DEBUG>>

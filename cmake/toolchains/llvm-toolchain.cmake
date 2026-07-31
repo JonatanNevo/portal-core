@@ -25,7 +25,7 @@ elseif(PORTAL_SANITIZER STREQUAL "TSan")
 endif()
 
 set(CMAKE_C_FLAGS_DEBUG_INIT "${SANITIZER_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG_INIT " -Wno-reserved-module-identifier ${SANITIZER_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT " -Wno-reserved-module-identifier -Wthread-safety ${SANITIZER_FLAGS}")
 
 set(RELEASE_FLAGS "-O3 ${SANITIZER_FLAGS}")
 
