@@ -13,10 +13,7 @@
         "portal-networking",
         "portal-serialization",
         "portal-engine",
-        "llvm-adt",
-        "enchantum",
-        "glaze",
-        "imgui"
+        "llvm-adt"
       ]
     }
   ],

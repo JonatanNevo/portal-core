@@ -3,7 +3,7 @@
 // Distributed under the MIT license (see LICENSE file).
 //
 
-export module portal.core:util;
+export module portal.core.util:variant;
 
 import std;
 

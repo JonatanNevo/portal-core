@@ -13,6 +13,9 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo;Release",
         "VCPKG_MANIFEST_FEATURES": "dev"
+      },
+      "environment": {
+        "VCPKG_BINARY_SOURCES": "default,readwrite"
       }
     },
     {

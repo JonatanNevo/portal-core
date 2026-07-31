@@ -6,4 +6,4 @@
 export module portal.core;
 
 export import :config;
-export import :util;
+export import portal.core.util;
