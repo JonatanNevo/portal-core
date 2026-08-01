@@ -19,10 +19,10 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#define PORTAL_FORCE_INLINE [[msvc::forceinline]] inline
+#define PORTAL_FORCE_INLINE [[msvc::forceinline]]
 #define PORTAL_EXPLICIT_STATIC static
 #elif defined(__GNUC__)
-#define PORTAL_FORCE_INLINE [[gnu::always_inline]] inline
+#define PORTAL_FORCE_INLINE [[gnu::always_inline]]
 #define PORTAL_EXPLICIT_STATIC static
 #else
 #define PORTAL_FORCE_INLINE inline

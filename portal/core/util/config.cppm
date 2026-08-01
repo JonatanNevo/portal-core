@@ -71,6 +71,4 @@ constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Dist;
 #else
 #error Undefined configuration
 #endif
-
-
 }

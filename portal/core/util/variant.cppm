@@ -9,7 +9,6 @@ import std;
 
 export namespace portal
 {
-
 namespace details
 {
     template <class... Ts>
@@ -27,5 +26,4 @@ void match(Variant&& variant, Matchers&&... matchers)
 {
     std::visit(details::visitor{std::forward<Matchers>(matchers)...}, std::forward<Variant>(variant));
 }
-
 }
