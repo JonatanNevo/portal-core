@@ -106,46 +106,57 @@ SCENARIO("LOG_*_NAMED macros log through the named logger at the default (Info) 
 
 SCENARIO("LOG_* macros target the default logger", "[unit][core][log][macros]")
 {
-    GIVEN("the default logger capturing to a stream")
+    GIVEN("logging lib has been initialized")
     {
-        std::ostringstream stream;
-        auto& logger = make_captured_logger("default", stream);
+        portal::log::init();
 
-        THEN("LOG_TRACE and LOG_DEBUG are compiled out and emit nothing")
+        AND_GIVEN("A default logger that points to a stream")
         {
-            LOG_TRACE("trace");
-            LOG_DEBUG("debug");
-            logger.flush();
-            REQUIRE(stream.str().empty());
+            std::ostringstream stream;
+            auto& logger = portal::log::get_default_logger();
+            const auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(stream);
+            logger.sinks() = {sink};
+            logger.set_pattern("%v");
+            logger.set_level(LogLevel::Trace);
+
+            THEN("LOG_TRACE and LOG_DEBUG are compiled out and emit nothing")
+            {
+                LOG_TRACE("trace");
+                LOG_DEBUG("debug");
+                logger.flush();
+                REQUIRE(stream.str().empty());
+            }
+
+            THEN("LOG_INFO logs a formatted message")
+            {
+                LOG_INFO("info {}", 1);
+                logger.flush();
+                REQUIRE(stream.str() == "info 1\n");
+            }
+
+            THEN("LOG_WARN logs a formatted message")
+            {
+                LOG_WARN("warn {}", 2);
+                logger.flush();
+                REQUIRE(stream.str() == "warn 2\n");
+            }
+
+            THEN("LOG_ERROR logs a formatted message")
+            {
+                LOG_ERROR("error {}", 3);
+                logger.flush();
+                REQUIRE(stream.str() == "error 3\n");
+            }
+
+            THEN("LOG_FATAL logs a formatted message")
+            {
+                LOG_FATAL("fatal {}", 4);
+                logger.flush();
+                REQUIRE(stream.str() == "fatal 4\n");
+            }
         }
 
-        THEN("LOG_INFO logs a formatted message")
-        {
-            LOG_INFO("info {}", 1);
-            logger.flush();
-            REQUIRE(stream.str() == "info 1\n");
-        }
-
-        THEN("LOG_WARN logs a formatted message")
-        {
-            LOG_WARN("warn {}", 2);
-            logger.flush();
-            REQUIRE(stream.str() == "warn 2\n");
-        }
-
-        THEN("LOG_ERROR logs a formatted message")
-        {
-            LOG_ERROR("error {}", 3);
-            logger.flush();
-            REQUIRE(stream.str() == "error 3\n");
-        }
-
-        THEN("LOG_FATAL logs a formatted message")
-        {
-            LOG_FATAL("fatal {}", 4);
-            logger.flush();
-            REQUIRE(stream.str() == "fatal 4\n");
-        }
+        portal::log::shutdown();
     }
 }
 

@@ -23,7 +23,7 @@ spdlog::sink_ptr get_platform_sinks(const std::filesystem::path& log_folder)
     if (sinks.empty() || dist_sink == nullptr)
     {
         sinks = {
-            std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>(),
+            std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
             std::make_shared<spdlog::sinks::basic_file_sink_mt>((log_folder / "portal.log").generic_string(), true)
         };
 

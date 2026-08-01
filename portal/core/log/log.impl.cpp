@@ -11,12 +11,13 @@ module;
 #include <spdlog/sinks/dist_sink.h>
 #include <spdlog/cfg/env.h>
 
+#include "portal/core/log/types.h"
+#include "portal/core/log_macros.h"
+
 module portal.core.log;
 
 import portal.core.concurrency;
 import portal.core.log.platform;
-
-#include "portal/core/log_macros.h"
 
 namespace portal::log
 {
@@ -52,6 +53,9 @@ void init()
 
 void init(const Config& config)
 {
+    // Baseline level from config; env var (below) takes precedence when set.
+    spdlog::set_level(static_cast<spdlog::level::level_enum>(config.default_log_level));
+
     // Find log levels in environment variables
     spdlog::cfg::load_env_levels(LOG_LEVEL_ENV_VAR);
     spdlog::set_automatic_registration(true);
@@ -91,6 +95,13 @@ Logger& get_logger(const std::string& logger_name)
     return *logger;
 }
 
+Logger& get_default_logger()
+{
+    const auto logger = std::dynamic_pointer_cast<Logger>(spdlog::default_logger());
+    // TODO: assert on empty default logger
+    return *logger;
+}
+
 void set_default_log_level(LogLevel level, const bool apply_to_all)
 {
     if (apply_to_all)
@@ -105,7 +116,7 @@ void set_default_log_level(LogLevel level, const bool apply_to_all)
 
 bool has_logger(const std::string& logger_name)
 {
-    return spdlog::get(logger_name) == nullptr;
+    return spdlog::get(logger_name) != nullptr;
 }
 
 void set_logger_level(const std::string& logger_name, LogLevel level)

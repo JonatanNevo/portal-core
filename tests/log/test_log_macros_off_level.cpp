@@ -9,16 +9,16 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/ostream_sink.h>
 
-import portal.core;
-
-#define PORTAL_ACTIVE_LEVEL PORTAL_LEVEL_OFF
+#define PORTAL_ACTIVE_LOG_LEVEL PORTAL_LOG_LEVEL_OFF
 #include "portal/core/log_macros.h"
+
+import portal.core;
 
 import std;
 
 using portal::log::LogLevel;
 
-// PORTAL_ACTIVE_LEVEL is forced to Off for this translation unit, so even LOG_FATAL_NAMED
+// PORTAL_ACTIVE_LOG_LEVEL is forced to Off for this translation unit, so even LOG_FATAL_NAMED
 // must be compiled out.
 SCENARIO("Raising PORTAL_ACTIVE_LEVEL to Off compiles out every LOG_*_NAMED macro, including Fatal", "[unit][core][log][macros]")
 {
@@ -40,7 +40,9 @@ SCENARIO("Raising PORTAL_ACTIVE_LEVEL to Off compiles out every LOG_*_NAMED macr
             LOG_ERROR_NAMED("test_log_macros_off_level", "error");
             LOG_FATAL_NAMED("test_log_macros_off_level", "fatal");
             logger.flush();
-            REQUIRE(stream.str().empty());
+            const auto res = stream.str();
+            INFO(res);
+            REQUIRE(res.empty());
         }
     }
 }

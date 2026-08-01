@@ -9,6 +9,7 @@ module;
 #include <spdlog/spdlog.h>
 #include <spdlog/async_logger.h>
 
+#include "portal/core/log/types.h"
 #include "portal/core/core_includes.h"
 
 export module portal.core.log;
@@ -18,7 +19,7 @@ import std;
 
 namespace portal::detail
 {
-template<typename... Args>
+template <typename... Args>
 struct log_format_string
 {
     spdlog::format_string_t<Args...> fmt;
@@ -40,18 +41,9 @@ using namespace std::string_view_literals;
 
 export namespace portal::log
 {
-constexpr auto LOG_LEVEL_ENV_VAR = "PORTAL_LOG_LEVELS";
-
-enum class LogLevel : uint8_t
-{
-    Trace = spdlog::level::trace,
-    Debug = spdlog::level::debug,
-    Info  = spdlog::level::info,
-    Warn  = spdlog::level::warn,
-    Error = spdlog::level::err,
-    Fatal = spdlog::level::critical,
-    Off   = spdlog::level::off,
-};
+// Exporting defined from types.h
+using log::LogLevel;
+using log::LOG_LEVEL_ENV_VAR;
 
 class Logger : public spdlog::logger, public std::enable_shared_from_this<Logger>
 {
@@ -177,6 +169,7 @@ void init(const Config& config);
 void shutdown();
 
 Logger& get_logger(const std::string& logger_name);
+Logger& get_default_logger();
 
 void set_default_log_level(LogLevel level, bool apply_to_all = true);
 

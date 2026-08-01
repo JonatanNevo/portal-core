@@ -5,21 +5,15 @@
 
 #pragma once
 
-#define PORTAL_LEVEL_TRACE 0
-#define PORTAL_LEVEL_DEBUG 1
-#define PORTAL_LEVEL_INFO  2
-#define PORTAL_LEVEL_WARN  3
-#define PORTAL_LEVEL_ERROR 4
-#define PORTAL_LEVEL_FATAL 5
-#define PORTAL_LEVEL_OFF   6
+#include "portal/core/log/types.h"
 
-#if !defined(PORTAL_ACTIVE_LEVEL)
-#define PORTAL_ACTIVE_LEVEL PORTAL_LEVEL_INFO
+#if !defined(PORTAL_ACTIVE_LOG_LEVEL)
+#define PORTAL_ACTIVE_LOG_LEVEL PORTAL_LOG_LEVEL_INFO
 #endif
 
 namespace portal::log
 {
-constexpr auto ACTIVE_LOG_LEVEL = static_cast<LogLevel>(PORTAL_ACTIVE_LEVEL);
+constexpr auto ACTIVE_LOG_LEVEL = static_cast<LogLevel>(PORTAL_ACTIVE_LOG_LEVEL);
 }
 
 
@@ -44,18 +38,18 @@ constexpr auto ACTIVE_LOG_LEVEL = static_cast<LogLevel>(PORTAL_ACTIVE_LEVEL);
 // Default logs                                                                                                     //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(level, ...)                                       \
-    if constexpr (::portal::log::LogLevel::level >= ::portal::log::ACTIVE_LOG_LEVEL)          \
-    {                                                                                         \
-        ::spdlog::default_logger()->log(spdlog::source_loc { __FILE__, __LINE__, SPDLOG_FUNCTION }, static_cast<::spdlog::level::level_enum>(::portal::log::LogLevel::level), __VA_ARGS__); \
+#define PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(level, ...)                                      \
+    if constexpr (::portal::log::LogLevel::level >= ::portal::log::ACTIVE_LOG_LEVEL)         \
+    {                                                                                        \
+       ::portal::log::get_default_logger().log(::portal::log::LogLevel::level, __VA_ARGS__); \
     }
 
-#define LOG_TRACE(...) PORTAL_LOG_IF_LEVEL_ENABLED(Trace, "default", __VA_ARGS__)
-#define LOG_DEBUG(...) PORTAL_LOG_IF_LEVEL_ENABLED(Debug, "default", __VA_ARGS__)
-#define LOG_INFO(...)  PORTAL_LOG_IF_LEVEL_ENABLED(Info,  "default", __VA_ARGS__)
-#define LOG_WARN(...)  PORTAL_LOG_IF_LEVEL_ENABLED(Warn,  "default", __VA_ARGS__)
-#define LOG_ERROR(...) PORTAL_LOG_IF_LEVEL_ENABLED(Error, "default", __VA_ARGS__)
-#define LOG_FATAL(...) PORTAL_LOG_IF_LEVEL_ENABLED(Fatal, "default", __VA_ARGS__)
+#define LOG_TRACE(...) PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(Trace, __VA_ARGS__)
+#define LOG_DEBUG(...) PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(Debug, __VA_ARGS__)
+#define LOG_INFO(...)  PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(Info,  __VA_ARGS__)
+#define LOG_WARN(...)  PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(Warn,  __VA_ARGS__)
+#define LOG_ERROR(...) PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(Error, __VA_ARGS__)
+#define LOG_FATAL(...) PORTAL_LOG_IF_LEVEL_ENABLED_DEFAULT(Fatal, __VA_ARGS__)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Logger logs (expects a logger named "logger" to be available in the context                                      //

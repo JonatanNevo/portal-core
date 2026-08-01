@@ -9,19 +9,19 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/ostream_sink.h>
 
-import portal.core;
-
-#define PORTAL_ACTIVE_LEVEL PORTAL_LEVEL_TRACE
+#define PORTAL_ACTIVE_LOG_LEVEL PORTAL_LOG_LEVEL_TRACE
 #include "portal/core/log_macros.h"
+
+import portal.core;
 
 import std;
 
 using portal::log::LogLevel;
 
-// PORTAL_ACTIVE_LEVEL is forced to Trace for this translation unit, so every LOG_*_NAMED
+// PORTAL_ACTIVE_LOG_LEVEL is forced to Trace for this translation unit, so every LOG_*_NAMED
 // macro (down to Trace) must be compiled in, unlike the default Info threshold covered
 // in test_log_macros.cpp.
-SCENARIO("Lowering PORTAL_ACTIVE_LEVEL to Trace compiles in every LOG_*_NAMED macro", "[unit][core][log][macros]")
+SCENARIO("Lowering PORTAL_ACTIVE_LOG_LEVEL to Trace compiles in every LOG_*_NAMED macro", "[unit][core][log][macros]")
 {
     GIVEN("a named logger capturing to a stream")
     {

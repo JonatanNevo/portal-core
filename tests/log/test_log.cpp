@@ -11,6 +11,7 @@
 #include <spdlog/sinks/ostream_sink.h>
 
 import portal.core;
+import portal.core.log.platform;
 import std;
 
 // Captures `call`'s output and the physical line it executed on, in one statement, so the
@@ -209,3 +210,130 @@ SCENARIO("Logger captures the caller's source_location for every level and log()
 }
 
 #undef CAPTURE_LOCATION
+
+SCENARIO("init() registers a default logger reachable through get_default_logger", "[unit][core][log]")
+{
+    GIVEN("logging is initialized with the default Config")
+    {
+        portal::log::init();
+
+        THEN("the default logger is registered under the default name")
+        {
+            auto& logger = portal::log::get_default_logger();
+            REQUIRE(logger.name() == "default");
+            REQUIRE(portal::log::has_logger("default"));
+        }
+
+        portal::log::shutdown();
+    }
+}
+
+SCENARIO("init(Config) applies the configured logger name and default log level", "[unit][core][log]")
+{
+    GIVEN("a Config with a non-default logger name and level")
+    {
+        portal::log::Config config;
+        config.default_logger_name = "test_log_init_custom";
+        config.default_log_level = LogLevel::Error;
+
+        THEN("the created default logger uses that name and level")
+        {
+            portal::log::init(config);
+
+            auto& logger = portal::log::get_default_logger();
+            REQUIRE(logger.name() == "test_log_init_custom");
+            REQUIRE(logger.level() == spdlog::level::err);
+
+            portal::log::shutdown();
+        }
+    }
+}
+
+SCENARIO("shutdown() clears the logger registry", "[unit][core][log]")
+{
+    GIVEN("an initialized environment with an extra named logger")
+    {
+        portal::log::init();
+        portal::log::get_logger("test_log_shutdown_extra");
+        REQUIRE(portal::log::has_logger("test_log_shutdown_extra"));
+
+        THEN("shutdown() drops every registered logger, default included")
+        {
+            portal::log::shutdown();
+            REQUIRE_FALSE(portal::log::has_logger("test_log_shutdown_extra"));
+            REQUIRE_FALSE(portal::log::has_logger("default"));
+        }
+    }
+}
+
+SCENARIO("has_logger reports whether a logger is registered", "[unit][core][log]")
+{
+    GIVEN("a freshly registered logger")
+    {
+        const std::string name = "test_log_has_logger_present";
+        portal::log::get_logger(name);
+
+        THEN("has_logger returns true")
+        {
+            REQUIRE(portal::log::has_logger(name));
+        }
+    }
+
+    GIVEN("a name that was never registered")
+    {
+        THEN("has_logger returns false")
+        {
+            REQUIRE_FALSE(portal::log::has_logger("test_log_has_logger_absent"));
+        }
+    }
+}
+
+SCENARIO("enable_logger mutes and restores a registered logger", "[unit][core][log]")
+{
+    GIVEN("a registered logger at a known level")
+    {
+        const std::string name = "test_log_enable_logger";
+        auto& logger = portal::log::get_logger(name);
+        logger.set_level(LogLevel::Warn);
+
+        THEN("enable_logger(name, true) mutes it")
+        {
+            portal::log::enable_logger(name, true);
+            REQUIRE(logger.level() == spdlog::level::off);
+
+            AND_THEN("enable_logger(name, false) un-mutes it")
+            {
+                portal::log::enable_logger(name, false);
+                REQUIRE(logger.level() != spdlog::level::off);
+            }
+        }
+    }
+
+    GIVEN("a name that was never registered")
+    {
+        THEN("enable_logger does not throw")
+        {
+            REQUIRE_NOTHROW(portal::log::enable_logger("test_log_enable_logger_missing", true));
+            REQUIRE_NOTHROW(portal::log::enable_logger("test_log_enable_logger_missing", false));
+        }
+    }
+}
+
+SCENARIO("get_platform_sinks returns a shared, non-null distribution sink", "[unit][core][log][platform]")
+{
+    GIVEN("the platform sink factory")
+    {
+        THEN("it returns a non-null sink")
+        {
+            const auto sink = portal::platform::get_platform_sinks(".");
+            REQUIRE(sink != nullptr);
+        }
+
+        THEN("repeated calls return the same cached instance regardless of the folder argument")
+        {
+            const auto first = portal::platform::get_platform_sinks(".");
+            const auto second = portal::platform::get_platform_sinks("some/other/folder");
+            REQUIRE(first == second);
+        }
+    }
+}

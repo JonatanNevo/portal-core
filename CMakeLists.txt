@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.30...4.4)
+cmake_minimum_required(VERSION 3.38...4.4 FATAL_ERROR)
 
 include(cmake/enable-experimental-import-std.cmake)
 
 # Load .env before project() so the vcpkg toolchain picks up VCPKG_BINARY_SOURCES when it loads.
 include(cmake/load-env-file.cmake)
 portal_load_env_file(".env")
+
+include(cmake/tests_helpers.cmake)
 
 file(READ "VERSION.txt" PROJECT_VERSION)
 string(STRIP "${PROJECT_VERSION}" PROJECT_VERSION)
@@ -140,6 +142,12 @@ elseif (UNIX)
     endif ()
 else ()
     message(FATAL_ERROR "Unsupported platform")
+endif ()
+
+if (MSVC)
+    target_compile_options(portal-core PRIVATE /W4 /WX)
+else ()
+    target_compile_options(portal-core PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-missing-designated-field-initializers -Wthread-safety)
 endif ()
 
 
