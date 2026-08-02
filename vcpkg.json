@@ -14,7 +14,8 @@
     },
     {
       "name": "spdlog",
-      "version>=": "1.17.0#1"
+      "version>=": "1.17.0#1",
+      "default-features": false
     },
     {
       "name": "enchantum",

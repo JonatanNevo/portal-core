@@ -34,10 +34,12 @@ option(
 )
 
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+set(CMAKE_CXX_MODULE_STD ON)
 
 find_package(Catch2 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(nfd CONFIG REQUIRED)
 
 # vcpkg's glm port ships glm/glm.cppm (g-truc/glm#1208) but glmConfig.cmake only
 # exports header-only imported targets, not a compiled module target. Build one
@@ -83,7 +85,7 @@ file(GLOB_RECURSE CORE_LINUX_HEADERS CONFIGURE_DEPENDS "portal/platform/core/lin
 
 add_library(portal-core STATIC)
 target_sources(portal-core
-        PUBLIC
+        PRIVATE
         ${CORE_SOURCES}
         PUBLIC
         FILE_SET CXX_MODULES
@@ -97,8 +99,10 @@ target_sources(portal-core
 set_target_properties(portal-core PROPERTIES CXX_MODULE_STD ON)
 target_compile_features(portal-core PUBLIC cxx_std_23)
 target_link_libraries(portal-core PUBLIC
-        spdlog::spdlog
         glm-module
+        PRIVATE
+        spdlog::spdlog
+        nfd::nfd
 )
 
 if (WIN32)

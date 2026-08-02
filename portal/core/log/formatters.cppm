@@ -38,7 +38,7 @@ public:
                 filename = full_path.substr(last_slash + 1);
             }
 
-            std::string location = fmt::format("{}:{}", filename, msg.source.line);
+            std::string location = std::format("{}:{}", filename, msg.source.line);
 
             // Pad to specified width, left-aligned
             if (location.length() < width_)
@@ -63,14 +63,14 @@ public:
 };
 }
 
-export namespace fmt
+export namespace std
 {
 template <>
 struct formatter<glm::vec2>
 {
     char presentation = 'f';
 
-    constexpr auto parse(const format_parse_context& ctx)
+    constexpr auto parse(format_parse_context& ctx)
     {
         auto it = ctx.begin();
         const auto end = ctx.end();
@@ -87,8 +87,8 @@ struct formatter<glm::vec2>
     auto format(const glm::vec2& vec, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? fmt::format_to(ctx.out(), "({:.3f}, {:.3f})", vec.x, vec.y)
-                   : fmt::format_to(ctx.out(), "({:.3e}, {:.3e})", vec.x, vec.y);
+                   ? std::format_to(ctx.out(), "({:.3f}, {:.3f})", vec.x, vec.y)
+                   : std::format_to(ctx.out(), "({:.3e}, {:.3e})", vec.x, vec.y);
     }
 };
 
@@ -97,7 +97,7 @@ struct formatter<glm::vec3>
 {
     char presentation = 'f';
 
-    constexpr auto parse(const format_parse_context& ctx)
+    constexpr auto parse(format_parse_context& ctx)
     {
         auto it = ctx.begin();
         const auto end = ctx.end();
@@ -114,8 +114,8 @@ struct formatter<glm::vec3>
     auto format(const glm::vec3& vec, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? fmt::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z)
-                   : fmt::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z);
+                   ? std::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z)
+                   : std::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z);
     }
 };
 
@@ -124,7 +124,7 @@ struct formatter<glm::vec4>
 {
     char presentation = 'f';
 
-    constexpr auto parse(const format_parse_context& ctx)
+    constexpr auto parse(format_parse_context& ctx)
     {
         auto it = ctx.begin();
         const auto end = ctx.end();
@@ -141,8 +141,8 @@ struct formatter<glm::vec4>
     auto format(const glm::vec4& vec, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? fmt::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z, vec.w)
-                   : fmt::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z, vec.w);
+                   ? std::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z, vec.w)
+                   : std::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z, vec.w);
     }
 };
 
@@ -151,7 +151,7 @@ struct formatter<glm::mat2>
 {
     char presentation = 'f';
 
-    constexpr auto parse(const format_parse_context& ctx)
+    constexpr auto parse(format_parse_context& ctx)
     {
         auto it = ctx.begin();
         const auto end = ctx.end();
@@ -168,11 +168,11 @@ struct formatter<glm::mat2>
     auto format(const glm::mat2& mat, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? fmt::format_to(ctx.out(),
+                   ? std::format_to(ctx.out(),
                          "[({:.3f}, {:.3f}), ({:.3f}, {:.3f})]",
                          mat[0][0], mat[0][1],
                          mat[1][0], mat[1][1])
-                   : fmt::format_to(ctx.out(),
+                   : std::format_to(ctx.out(),
                          "[({:.3e}, {:.3e}), ({:.3e}, {:.3e})]",
                          mat[0][0], mat[0][1],
                          mat[1][0], mat[1][1]);
@@ -184,7 +184,7 @@ struct formatter<glm::mat3>
 {
     char presentation = 'f';
 
-    constexpr auto parse(const format_parse_context& ctx)
+    constexpr auto parse(format_parse_context& ctx)
     {
         auto it = ctx.begin();
         const auto end = ctx.end();
@@ -201,12 +201,12 @@ struct formatter<glm::mat3>
     auto format(const glm::mat3& mat, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? fmt::format_to(ctx.out(),
+                   ? std::format_to(ctx.out(),
                          "[({:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f})]",
                          mat[0][0], mat[0][1], mat[0][2],
                          mat[1][0], mat[1][1], mat[1][2],
                          mat[2][0], mat[2][1], mat[2][2])
-                   : fmt::format_to(ctx.out(),
+                   : std::format_to(ctx.out(),
                          "[({:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e})]",
                          mat[0][0], mat[0][1], mat[0][2],
                          mat[1][0], mat[1][1], mat[1][2],
@@ -219,7 +219,7 @@ struct formatter<glm::mat4>
 {
     char presentation = 'f';
 
-    constexpr auto parse(const format_parse_context& ctx)
+    constexpr auto parse(format_parse_context& ctx)
     {
         auto it = ctx.begin();
         const auto end = ctx.end();
@@ -236,13 +236,13 @@ struct formatter<glm::mat4>
     auto format(const glm::mat4& mat, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? fmt::format_to(ctx.out(),
+                   ? std::format_to(ctx.out(),
                          "[({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f})]",
                          mat[0][0], mat[0][1], mat[0][2], mat[0][3],
                          mat[1][0], mat[1][1], mat[1][2], mat[1][3],
                          mat[2][0], mat[2][1], mat[2][2], mat[2][3],
                          mat[3][0], mat[3][1], mat[3][2], mat[3][3])
-                   : fmt::format_to(ctx.out(),
+                   : std::format_to(ctx.out(),
                          "[({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e})]",
                          mat[0][0], mat[0][1], mat[0][2], mat[0][3],
                          mat[1][0], mat[1][1], mat[1][2], mat[1][3],
