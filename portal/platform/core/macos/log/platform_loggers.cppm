@@ -5,10 +5,10 @@
 
 module;
 
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/dist_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 export module portal.core.log.platform:macos;
 
@@ -23,8 +23,8 @@ spdlog::sink_ptr get_platform_sinks(const std::filesystem::path& log_folder)
     if (sinks.empty() || dist_sink == nullptr)
     {
         sinks = {
-            std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
-            std::make_shared<spdlog::sinks::basic_file_sink_mt>((log_folder / "portal.log").generic_string(), true)
+                std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
+                std::make_shared<spdlog::sinks::basic_file_sink_mt>((log_folder / "portal.log").generic_string(), true)
         };
 
         dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>(sinks);

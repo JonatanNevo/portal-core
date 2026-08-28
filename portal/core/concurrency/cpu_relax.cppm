@@ -38,7 +38,7 @@ PORTAL_FORCE_INLINE void cpu_relax()
         }
         else if constexpr (PORTAL_ARCHITECTURE == Architecture::Arm)
         {
-            __asm__ __volatile__ ("yield" ::: "memory");
+            __asm__ __volatile__("yield" ::: "memory");
             return;
         }
     }
@@ -46,4 +46,4 @@ PORTAL_FORCE_INLINE void cpu_relax()
     // Fallback
     std::this_thread::yield();
 }
-}
+} // namespace portal

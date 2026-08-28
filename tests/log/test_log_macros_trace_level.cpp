@@ -6,8 +6,8 @@
 #include <catch2/catch_all.hpp>
 
 #define SPDLOG_SOURCE_LOCATION 1
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/spdlog.h>
 
 #define PORTAL_ACTIVE_LOG_LEVEL PORTAL_LOG_LEVEL_TRACE
 #include "portal/core/log_macros.h"

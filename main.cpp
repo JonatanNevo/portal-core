@@ -7,5 +7,4 @@ import std;
 import portal.core;
 
 int main()
-{
-}
+{}

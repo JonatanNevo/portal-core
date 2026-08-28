@@ -22,11 +22,12 @@ SCENARIO("A variant class works with the portal::match", "[unit][core][util]")
             {
                 std::string result;
                 portal::match(
-                    some_variant,
-                    [&](int v) { result = "int:" + std::to_string(v); },
-                    [&](float) { result = "float"; },
-                    [&](double) { result = "double"; },
-                    [&](const std::string&) { result = "string"; });
+                        some_variant,
+                        [&](int v) { result = "int:" + std::to_string(v); },
+                        [&](float) { result = "float"; },
+                        [&](double) { result = "double"; },
+                        [&](const std::string&) { result = "string"; }
+                );
 
                 REQUIRE(result == "int:42");
             }
@@ -40,11 +41,12 @@ SCENARIO("A variant class works with the portal::match", "[unit][core][util]")
             {
                 std::string result;
                 portal::match(
-                    some_variant,
-                    [&](int) { result = "int"; },
-                    [&](float v) { result = "float:" + std::to_string(v); },
-                    [&](double) { result = "double"; },
-                    [&](const std::string&) { result = "string"; });
+                        some_variant,
+                        [&](int) { result = "int"; },
+                        [&](float v) { result = "float:" + std::to_string(v); },
+                        [&](double) { result = "double"; },
+                        [&](const std::string&) { result = "string"; }
+                );
 
                 REQUIRE(result.starts_with("float:"));
             }
@@ -58,11 +60,12 @@ SCENARIO("A variant class works with the portal::match", "[unit][core][util]")
             {
                 std::string result;
                 portal::match(
-                    some_variant,
-                    [&](int) { result = "int"; },
-                    [&](float) { result = "float"; },
-                    [&](double v) { result = "double:" + std::to_string(v); },
-                    [&](const std::string&) { result = "string"; });
+                        some_variant,
+                        [&](int) { result = "int"; },
+                        [&](float) { result = "float"; },
+                        [&](double v) { result = "double:" + std::to_string(v); },
+                        [&](const std::string&) { result = "string"; }
+                );
 
                 REQUIRE(result.starts_with("double:"));
             }
@@ -76,11 +79,12 @@ SCENARIO("A variant class works with the portal::match", "[unit][core][util]")
             {
                 std::string result;
                 portal::match(
-                    some_variant,
-                    [&](int) { result = "int"; },
-                    [&](float) { result = "float"; },
-                    [&](double) { result = "double"; },
-                    [&](const std::string& v) { result = "string:" + v; });
+                        some_variant,
+                        [&](int) { result = "int"; },
+                        [&](float) { result = "float"; },
+                        [&](double) { result = "double"; },
+                        [&](const std::string& v) { result = "string:" + v; }
+                );
 
                 REQUIRE(result == "string:hello");
             }
@@ -113,9 +117,10 @@ SCENARIO("A variant class works with the portal::match", "[unit][core][util]")
             {
                 std::string result;
                 portal::match(
-                    some_variant,
-                    [&](int) { result = "int"; },
-                    [&](const std::string& v) { result = "string:" + v; });
+                        some_variant,
+                        [&](int) { result = "int"; },
+                        [&](const std::string& v) { result = "string:" + v; }
+                );
 
                 REQUIRE(result == "string:const");
             }

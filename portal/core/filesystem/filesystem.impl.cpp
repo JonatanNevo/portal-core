@@ -75,7 +75,10 @@ bool exists(const std::string& file_path)
     return {};
 }
 
-[[nodiscard]] std::expected<void, std::error_code> move(const std::filesystem::path& from, const std::filesystem::path& to)
+[[nodiscard]] std::expected<void, std::error_code> move(
+        const std::filesystem::path& from,
+        const std::filesystem::path& to
+)
 {
     if (portal::filesystem::exists(to))
         return std::unexpected{std::make_error_code(std::errc::file_exists)};
@@ -91,7 +94,10 @@ bool exists(const std::string& file_path)
     return {};
 }
 
-[[nodiscard]] std::expected<void, std::error_code> copy(const std::filesystem::path& from, const std::filesystem::path& to)
+[[nodiscard]] std::expected<void, std::error_code> copy(
+        const std::filesystem::path& from,
+        const std::filesystem::path& to
+)
 {
     std::expected<void, std::error_code> res;
     if (portal::filesystem::is_directory(to) && !portal::filesystem::exists(to))
@@ -117,14 +123,21 @@ bool exists(const std::string& file_path)
     return {};
 }
 
-[[nodiscard]] std::expected<void, std::error_code> rename(const std::filesystem::path& from, const std::filesystem::path& to)
+[[nodiscard]] std::expected<void, std::error_code> rename(
+        const std::filesystem::path& from,
+        const std::filesystem::path& to
+)
 {
     return move(from, to);
 }
 
-[[nodiscard]] std::expected<void, std::error_code> rename_filename(const std::filesystem::path& path, const std::string& new_name)
+[[nodiscard]] std::expected<void, std::error_code> rename_filename(
+        const std::filesystem::path& path,
+        const std::string& new_name
+)
 {
-    const std::filesystem::path new_path = path.parent_path() / std::filesystem::path(new_name + path.extension().string());
+    const std::filesystem::path new_path =
+            path.parent_path() / std::filesystem::path(new_name + path.extension().string());
     return portal::filesystem::rename(path, new_path);
 }
 
@@ -146,10 +159,10 @@ bool exists(const std::string& file_path)
     }
 
     return FileStat(
-        std::filesystem::is_regular_file(fs_stat),
-        std::filesystem::is_directory(fs_stat),
-        std::filesystem::last_write_time(path).time_since_epoch().count(),
-        size
+            std::filesystem::is_regular_file(fs_stat),
+            std::filesystem::is_directory(fs_stat),
+            std::filesystem::last_write_time(path).time_since_epoch().count(),
+            size
     );
 }
 
@@ -177,7 +190,7 @@ uint64_t get_last_write_time(const std::filesystem::path& path)
     return stat.transform([](auto stat_value) { return stat_value.last_write_time; }).value_or(0);
 }
 
-std::filesystem::path get_unique_file_name(const std::filesystem::path& path)\
+std::filesystem::path get_unique_file_name(const std::filesystem::path& path)
 {
     if (!portal::filesystem::exists(path))
         return path;
@@ -196,7 +209,11 @@ std::filesystem::path get_unique_file_name(const std::filesystem::path& path)\
     }
 }
 
-std::expected<void, std::error_code> write_file(const std::filesystem::path& path, const std::span<const std::byte>& buffer, size_t offset)
+std::expected<void, std::error_code> write_file(
+        const std::filesystem::path& path,
+        const std::span<const std::byte>& buffer,
+        size_t offset
+)
 {
     const auto abs_path = std::filesystem::absolute(path);
 
@@ -208,8 +225,8 @@ std::expected<void, std::error_code> write_file(const std::filesystem::path& pat
 
 
     const auto mode = offset == 0 || !std::filesystem::exists(abs_path)
-        ? std::ios::binary | std::ios::trunc
-        : std::ios::binary | std::ios::in | std::ios::out;
+                              ? std::ios::binary | std::ios::trunc
+                              : std::ios::binary | std::ios::in | std::ios::out;
     std::ofstream file(abs_path, mode);
 
     if (!file.is_open())
@@ -220,18 +237,29 @@ std::expected<void, std::error_code> write_file(const std::filesystem::path& pat
     }
 
     file.seekp(static_cast<std::streamoff>(offset), std::ios::beg);
-    file.write(reinterpret_cast<const std::ostream::char_type*>(buffer.data()), static_cast<std::streamsize>(buffer.size()));
+    file.write(
+            reinterpret_cast<const std::ostream::char_type*>(buffer.data()),
+            static_cast<std::streamsize>(buffer.size())
+    );
     file.close();
 
     return {};
 }
 
-std::expected<void, std::error_code> write_file(const std::filesystem::path& path, const std::string& data, size_t offset)
+std::expected<void, std::error_code> write_file(
+        const std::filesystem::path& path,
+        const std::string& data,
+        size_t offset
+)
 {
     return write_file(path, std::span{reinterpret_cast<const std::byte*>(data.data()), data.size()}, offset);
 }
 
-std::expected<std::vector<std::byte>, std::error_code> read_chunk(const std::filesystem::path& path, size_t offset, size_t count)
+std::expected<std::vector<std::byte>, std::error_code> read_chunk(
+        const std::filesystem::path& path,
+        size_t offset,
+        size_t count
+)
 {
     const auto abs_path = std::filesystem::absolute(path);
 
@@ -253,7 +281,13 @@ std::expected<std::vector<std::byte>, std::error_code> read_chunk(const std::fil
 
     if (offset + count > size)
     {
-        LOGGER_ERROR("{}: Requested read chunk ({} + {}) is bigger than size: ({})", path.string(), offset, count, size);
+        LOGGER_ERROR(
+                "{}: Requested read chunk ({} + {}) is bigger than size: ({})",
+                path.string(),
+                offset,
+                count,
+                size
+        );
         return std::unexpected{std::make_error_code(std::errc::result_out_of_range)};
     }
 
@@ -272,10 +306,11 @@ std::expected<std::vector<std::byte>, std::error_code> read_file_binary(const st
 std::expected<std::string, std::error_code> read_file_string(const std::filesystem::path& path)
 {
     return read_file_binary(path).transform(
-        [](auto&& binary)
-        {
-            return binary | std::views::transform([](auto& byte) { return static_cast<const char>(byte); }) | std::ranges::to<std::string>();
-        }
+            [](auto&& binary)
+            {
+                return binary | std::views::transform([](auto& byte) { return static_cast<const char>(byte); }) |
+                       std::ranges::to<std::string>();
+            }
     );
 }
-}
+} // namespace portal::filesystem

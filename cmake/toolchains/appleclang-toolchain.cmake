@@ -25,7 +25,7 @@ set(CMAKE_CXX_COMPILER c++)
 
 if(PORTAL_SANITIZER STREQUAL "MaxSan")
     set(SANITIZER_FLAGS
-            "-fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined"
+        "-fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined"
     )
 elseif(PORTAL_SANITIZER STREQUAL "TSan")
     set(SANITIZER_FLAGS "-fsanitize=thread")
