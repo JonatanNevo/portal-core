@@ -16,7 +16,10 @@ import portal.core.log;
 
 namespace portal::filesystem
 {
-static auto& logger = portal::log::get_logger("Filesystem");
+namespace
+{
+    auto& logger = portal::log::get_logger("Filesystem"); // NOLINT (cppcoreguidelines-avoid-non-const-global-variables)
+}
 
 std::filesystem::path get_working_directory()
 {

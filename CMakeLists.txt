@@ -19,6 +19,24 @@ project(
 
 message(STATUS "Configuring ${PROJECT_NAME} - version: ${PROJECT_VERSION}")
 
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy" "clang-tidy-15" "clang-tidy-14")
+
+if(NOT CLANG_TIDY_EXE)
+    message(WARNING "clang-tidy executable not found!")
+endif()
+
+# Run clang-tidy only on first-party targets. Setting CMAKE_CXX_CLANG_TIDY
+# globally also lints CMake's std module target and the vcpkg-sourced
+# glm-module, whose generated .cppm files we do not own.
+function(portal_enable_clang_tidy target)
+    if(CLANG_TIDY_EXE)
+        set_target_properties(
+            ${target}
+            PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE}"
+        )
+    endif()
+endfunction()
+
 # [CMAKE.SKIP_TESTS]
 option(
     PORTAL_CORE_BUILD_TESTS
@@ -40,6 +58,7 @@ find_package(Catch2 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(nfd CONFIG REQUIRED)
+find_package(Microsoft.GSL CONFIG REQUIRED)
 
 # vcpkg's glm port ships glm/glm.cppm (g-truc/glm#1208) but glmConfig.cmake only
 # exports header-only imported targets, not a compiled module target. Build one
@@ -140,11 +159,12 @@ target_sources(
             BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
 )
 set_target_properties(portal-core PROPERTIES CXX_MODULE_STD ON)
+portal_enable_clang_tidy(portal-core)
 target_compile_features(portal-core PUBLIC cxx_std_23)
 target_link_libraries(
     portal-core
     PUBLIC glm-module
-    PRIVATE spdlog::spdlog nfd::nfd
+    PRIVATE spdlog::spdlog nfd::nfd Microsoft.GSL::GSL
 )
 
 if(WIN32)
@@ -222,3 +242,4 @@ endif()
 add_executable(main main.cpp)
 target_link_libraries(main portal-core)
 set_target_properties(main PROPERTIES CXX_MODULE_STD ON)
+portal_enable_clang_tidy(main)

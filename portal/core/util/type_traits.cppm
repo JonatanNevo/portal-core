@@ -42,11 +42,11 @@ struct concat<type_list<Ts...>>
 template<typename... Ts, typename... Us, typename... Rest>
 struct concat<type_list<Ts...>, type_list<Us...>, Rest...>
 {
-    using type = typename concat<type_list<Ts..., Us...>, Rest...>::type;
+    using type = concat<type_list<Ts..., Us...>, Rest...>::type;
 };
 
 template<typename... Lists>
-using concat_t = typename concat<Lists...>::type;
+using concat_t = concat<Lists...>::type;
 
 // Filter types based on a predicate
 template<template<typename> class Pred, typename... Ts>
@@ -61,10 +61,10 @@ struct filter<Pred>
 template<template<typename> class Pred, typename T, typename... Ts>
 struct filter<Pred, T, Ts...>
 {
-    using rest = typename filter<Pred, Ts...>::type;
+    using rest = filter<Pred, Ts...>::type;
     using type = std::conditional_t<Pred<T>::value, concat_t<type_list<T>, rest>, rest>;
 };
 
 template<template<typename> class Pred, typename... Ts>
-using filter_t = typename filter<Pred, Ts...>::type;
+using filter_t = filter<Pred, Ts...>::type;
 } // namespace portal

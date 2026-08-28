@@ -15,6 +15,11 @@
 
 include_guard(GLOBAL)
 
+# sccache with MSVC requires embedded debug info (no separate PDB). Kept here
+# so the setting applies even though the launcher is set in the root project.
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+cmake_policy(SET CMP0141 NEW)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)

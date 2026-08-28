@@ -5,13 +5,13 @@
 
 #pragma once
 
-#if defined(__GNUC__)
-#if defined(__clang__)
+#ifdef __GNUC__
+#ifdef __clang__
 #define PORTAL_COMPILER_CLANG
 #else
 #define PORTAL_COMPILER_GCC
 #endif
-#elif defined(_MSC_VER)
+#elifdef _MSC_VER
 #define PORTAL_COMPILER_MSVC
 #endif
 
@@ -20,7 +20,7 @@
 #define NOMINMAX
 #endif
 #define PORTAL_FORCE_INLINE [[msvc::forceinline]] inline
-#elif defined(__GNUC__)
+#elifdef __GNUC__
 #define PORTAL_FORCE_INLINE [[gnu::always_inline]] inline
 #else
 #define PORTAL_FORCE_INLINE inline
@@ -34,11 +34,11 @@
 #error "Unsupported architecture"
 #endif
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #define PORTAL_PLATFORM_WINDOWS
-#elif defined(__APPLE__)
+#elifdef __APPLE__
 #define PORTAL_PLATFORM_MACOS
-#elif defined(__linux__)
+#elifdef __linux__
 #define PORTAL_PLATFORM_LINUX
 #else
 #error "Unsupported platform"

@@ -6,7 +6,6 @@
 module;
 
 #define SPDLOG_SOURCE_LOCATION 1
-#include <spdlog/async_logger.h>
 #include <spdlog/spdlog.h>
 
 #include "portal/core/core_includes.h"
@@ -20,7 +19,7 @@ import std;
 namespace portal::detail
 {
 template<typename... Args>
-struct log_format_string
+struct log_format_string // NOLINT (misc-use-internal-linkage)
 {
     spdlog::format_string_t<Args...> fmt;
     std::source_location loc;
@@ -28,7 +27,7 @@ struct log_format_string
     template<typename T>
         requires std::convertible_to<const T&, spdlog::format_string_t<Args...>>
     constexpr log_format_string(const T& s, const std::source_location l = std::source_location::current()) :
-        fmt(s),
+        fmt(s), // NOLINT (cppcoreguidelines-pro-bounds-array-to-pointer-decay)
         loc(l)
     {}
 
@@ -38,15 +37,14 @@ struct log_format_string
 };
 
 template<typename... Args>
-using log_format_string_t = typename log_format_string<Args...>::type;
+using log_format_string_t = log_format_string<Args...>::type;
 } // namespace portal::detail
 
-using namespace std::string_view_literals;
 
 export namespace portal::log
 {
 // Exporting defined from types.h
-using log::LOG_LEVEL_ENV_VAR;
+using log::LOG_LEVEL_ENV_VAR; // NOLINT(misc-unused-using-decls)
 using log::LogLevel;
 
 class Logger : public spdlog::logger, public std::enable_shared_from_this<Logger>
@@ -83,7 +81,11 @@ public:
         // spdlog v2 when? :(
         const spdlog::source_loc spdlog_loc{loc.file_name(), static_cast<int>(loc.line()), loc.function_name()};
 
-        spdlog::logger::log(spdlog_loc, static_cast<spdlog::level::level_enum>(level), message);
+        spdlog::logger::log(
+                spdlog_loc,
+                static_cast<spdlog::level::level_enum>(level),
+                message // NOLINT(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+        );
     }
 
     template<typename... Args>
@@ -166,10 +168,12 @@ private:
     LogLevel prev_level = LogLevel::Off;
 };
 
+constexpr std::string_view DEFAULT_LOGGER_NAME = "default";
+
 struct Config
 {
     LogLevel default_log_level = LogLevel::Trace;
-    std::string_view default_logger_name = "default"sv;
+    std::string_view default_logger_name = DEFAULT_LOGGER_NAME;
     std::string_view application_name;
 };
 

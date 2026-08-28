@@ -9,52 +9,54 @@ module;
 
 export module portal.core.util:config;
 
+import std.compat;
+
 export namespace portal
 {
-enum class Platform
+enum class Platform : uint8_t
 {
     Windows,
     MacOS,
     Linux
 };
 
-#if defined(PORTAL_PLATFORM_WINDOWS)
+#ifdef PORTAL_PLATFORM_WINDOWS
 constexpr auto PORTAL_PLATFORM = portal::Platform::Windows;
-#elif defined(PORTAL_PLATFORM_MACOS)
+#elifdef PORTAL_PLATFORM_MACOS
 constexpr auto PORTAL_PLATFORM = portal::Platform::MacOS;
-#elif defined(PORTAL_PLATFORM_LINUX)
+#elifdef PORTAL_PLATFORM_LINUX
 constexpr auto PORTAL_PLATFORM = portal::Platform::Linux;
 #endif
 
-enum class Compiler
+enum class Compiler : uint8_t
 {
     GCC,
     Clang,
     MSVC
 };
 
-enum class Architecture
+enum class Architecture : uint8_t
 {
     Arm,
     x86
 };
 
-#if defined(PORTAL_COMPILER_CLANG)
+#ifdef PORTAL_COMPILER_CLANG
 constexpr auto PORTAL_COMPILER = Compiler::Clang;
-#elif defined(PORTAL_COMPILER_GCC)
+#elifdef PORTAL_COMPILER_GCC
 constexpr auto PORTAL_COMPILER = Compiler::GCC;
-#elif defined(PORTAL_COMPILER_MSVC)
+#elifdef PORTAL_COMPILER_MSVC
 constexpr auto PORTAL_COMPILER = Compiler::MSVC;
 #endif
 
-#if defined(PORTAL_ARCHITECTURE_X86)
+#ifdef PORTAL_ARCHITECTURE_X86
 constexpr auto PORTAL_ARCHITECTURE = portal::Architecture::x86;
-#elif defined(PORTAL_ARCHITECTURE_ARM)
+#elifdef PORTAL_ARCHITECTURE_ARM
 constexpr auto PORTAL_ARCHITECTURE = portal::Architecture::Arm;
 #endif
 
 
-enum class BuildConfiguration
+enum class BuildConfiguration : uint8_t
 {
     Debug,
     Development,
@@ -62,9 +64,9 @@ enum class BuildConfiguration
 };
 
 /* Build Configuration */
-#if defined(PORTAL_DEBUG)
+#ifdef PORTAL_DEBUG
 constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Debug;
-#elif defined(PORTAL_DEVELOPMENT)
+#elifdef PORTAL_DEVELOPMENT
 constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Development;
 #elif defined(PORTAL_DIST)
 constexpr auto PORTAL_BUILD = portal::BuildConfiguration::Dist;

@@ -7,7 +7,7 @@
 
 #include "portal/core/log/types.h"
 
-#if !defined(PORTAL_ACTIVE_LOG_LEVEL)
+#ifndef PORTAL_ACTIVE_LOG_LEVEL
 #define PORTAL_ACTIVE_LOG_LEVEL PORTAL_LOG_LEVEL_INFO
 #endif
 
