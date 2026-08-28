@@ -5,8 +5,8 @@
 
 module;
 
-#include <spdlog/spdlog.h>
 #include <spdlog/pattern_formatter.h>
+#include <spdlog/spdlog.h>
 
 export module portal.core.log:formatters;
 
@@ -61,11 +61,11 @@ public:
         return spdlog::details::make_unique<source_location_flag_formatter>(width_);
     }
 };
-}
+} // namespace portal
 
 export namespace std
 {
-template <>
+template<>
 struct formatter<glm::vec2>
 {
     char presentation = 'f';
@@ -83,16 +83,15 @@ struct formatter<glm::vec2>
         return it;
     }
 
-    template <typename FormatContext>
+    template<typename FormatContext>
     auto format(const glm::vec2& vec, FormatContext& ctx) const
     {
-        return presentation == 'f'
-                   ? std::format_to(ctx.out(), "({:.3f}, {:.3f})", vec.x, vec.y)
-                   : std::format_to(ctx.out(), "({:.3e}, {:.3e})", vec.x, vec.y);
+        return presentation == 'f' ? std::format_to(ctx.out(), "({:.3f}, {:.3f})", vec.x, vec.y)
+                                   : std::format_to(ctx.out(), "({:.3e}, {:.3e})", vec.x, vec.y);
     }
 };
 
-template <>
+template<>
 struct formatter<glm::vec3>
 {
     char presentation = 'f';
@@ -110,16 +109,15 @@ struct formatter<glm::vec3>
         return it;
     }
 
-    template <typename FormatContext>
+    template<typename FormatContext>
     auto format(const glm::vec3& vec, FormatContext& ctx) const
     {
-        return presentation == 'f'
-                   ? std::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z)
-                   : std::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z);
+        return presentation == 'f' ? std::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z)
+                                   : std::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z);
     }
 };
 
-template <>
+template<>
 struct formatter<glm::vec4>
 {
     char presentation = 'f';
@@ -137,16 +135,16 @@ struct formatter<glm::vec4>
         return it;
     }
 
-    template <typename FormatContext>
+    template<typename FormatContext>
     auto format(const glm::vec4& vec, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? std::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z, vec.w)
-                   : std::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z, vec.w);
+                       ? std::format_to(ctx.out(), "({:.3f}, {:.3f}, {:.3f}, {:.3f})", vec.x, vec.y, vec.z, vec.w)
+                       : std::format_to(ctx.out(), "({:.3e}, {:.3e}, {:.3e}, {:.3e})", vec.x, vec.y, vec.z, vec.w);
     }
 };
 
-template <>
+template<>
 struct formatter<glm::mat2>
 {
     char presentation = 'f';
@@ -164,22 +162,29 @@ struct formatter<glm::mat2>
         return it;
     }
 
-    template <typename FormatContext>
+    template<typename FormatContext>
     auto format(const glm::mat2& mat, FormatContext& ctx) const
     {
-        return presentation == 'f'
-                   ? std::format_to(ctx.out(),
-                         "[({:.3f}, {:.3f}), ({:.3f}, {:.3f})]",
-                         mat[0][0], mat[0][1],
-                         mat[1][0], mat[1][1])
-                   : std::format_to(ctx.out(),
-                         "[({:.3e}, {:.3e}), ({:.3e}, {:.3e})]",
-                         mat[0][0], mat[0][1],
-                         mat[1][0], mat[1][1]);
+        return presentation == 'f' ? std::format_to(
+                                             ctx.out(),
+                                             "[({:.3f}, {:.3f}), ({:.3f}, {:.3f})]",
+                                             mat[0][0],
+                                             mat[0][1],
+                                             mat[1][0],
+                                             mat[1][1]
+                                     )
+                                   : std::format_to(
+                                             ctx.out(),
+                                             "[({:.3e}, {:.3e}), ({:.3e}, {:.3e})]",
+                                             mat[0][0],
+                                             mat[0][1],
+                                             mat[1][0],
+                                             mat[1][1]
+                                     );
     }
 };
 
-template <>
+template<>
 struct formatter<glm::mat3>
 {
     char presentation = 'f';
@@ -197,24 +202,40 @@ struct formatter<glm::mat3>
         return it;
     }
 
-    template <typename FormatContext>
+    template<typename FormatContext>
     auto format(const glm::mat3& mat, FormatContext& ctx) const
     {
         return presentation == 'f'
-                   ? std::format_to(ctx.out(),
-                         "[({:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f})]",
-                         mat[0][0], mat[0][1], mat[0][2],
-                         mat[1][0], mat[1][1], mat[1][2],
-                         mat[2][0], mat[2][1], mat[2][2])
-                   : std::format_to(ctx.out(),
-                         "[({:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e})]",
-                         mat[0][0], mat[0][1], mat[0][2],
-                         mat[1][0], mat[1][1], mat[1][2],
-                         mat[2][0], mat[2][1], mat[2][2]);
+                       ? std::format_to(
+                                 ctx.out(),
+                                 "[({:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f})]",
+                                 mat[0][0],
+                                 mat[0][1],
+                                 mat[0][2],
+                                 mat[1][0],
+                                 mat[1][1],
+                                 mat[1][2],
+                                 mat[2][0],
+                                 mat[2][1],
+                                 mat[2][2]
+                         )
+                       : std::format_to(
+                                 ctx.out(),
+                                 "[({:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e})]",
+                                 mat[0][0],
+                                 mat[0][1],
+                                 mat[0][2],
+                                 mat[1][0],
+                                 mat[1][1],
+                                 mat[1][2],
+                                 mat[2][0],
+                                 mat[2][1],
+                                 mat[2][2]
+                         );
     }
 };
 
-template <>
+template<>
 struct formatter<glm::mat4>
 {
     char presentation = 'f';
@@ -232,22 +253,51 @@ struct formatter<glm::mat4>
         return it;
     }
 
-    template <typename FormatContext>
+    template<typename FormatContext>
     auto format(const glm::mat4& mat, FormatContext& ctx) const
     {
-        return presentation == 'f'
-                   ? std::format_to(ctx.out(),
-                         "[({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f})]",
-                         mat[0][0], mat[0][1], mat[0][2], mat[0][3],
-                         mat[1][0], mat[1][1], mat[1][2], mat[1][3],
-                         mat[2][0], mat[2][1], mat[2][2], mat[2][3],
-                         mat[3][0], mat[3][1], mat[3][2], mat[3][3])
-                   : std::format_to(ctx.out(),
-                         "[({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e})]",
-                         mat[0][0], mat[0][1], mat[0][2], mat[0][3],
-                         mat[1][0], mat[1][1], mat[1][2], mat[1][3],
-                         mat[2][0], mat[2][1], mat[2][2], mat[2][3],
-                         mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
+        return presentation == 'f' ? std::format_to(
+                                             ctx.out(),
+                                             "[({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f}), "
+                                             "({:.3f}, {:.3f}, {:.3f}, {:.3f}), ({:.3f}, {:.3f}, {:.3f}, {:.3f})]",
+                                             mat[0][0],
+                                             mat[0][1],
+                                             mat[0][2],
+                                             mat[0][3],
+                                             mat[1][0],
+                                             mat[1][1],
+                                             mat[1][2],
+                                             mat[1][3],
+                                             mat[2][0],
+                                             mat[2][1],
+                                             mat[2][2],
+                                             mat[2][3],
+                                             mat[3][0],
+                                             mat[3][1],
+                                             mat[3][2],
+                                             mat[3][3]
+                                     )
+                                   : std::format_to(
+                                             ctx.out(),
+                                             "[({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e}), "
+                                             "({:.3e}, {:.3e}, {:.3e}, {:.3e}), ({:.3e}, {:.3e}, {:.3e}, {:.3e})]",
+                                             mat[0][0],
+                                             mat[0][1],
+                                             mat[0][2],
+                                             mat[0][3],
+                                             mat[1][0],
+                                             mat[1][1],
+                                             mat[1][2],
+                                             mat[1][3],
+                                             mat[2][0],
+                                             mat[2][1],
+                                             mat[2][2],
+                                             mat[2][3],
+                                             mat[3][0],
+                                             mat[3][1],
+                                             mat[3][2],
+                                             mat[3][3]
+                                     );
     }
 };
 

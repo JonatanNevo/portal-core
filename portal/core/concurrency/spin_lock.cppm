@@ -33,6 +33,7 @@ export namespace portal
 class [[clang::capability("mutex")]] SpinLock
 {
     static constexpr auto SPIN_BACKOFF_COUNT = 16;
+
 public:
     /**
      * Attempts to acquire the lock for the current thread without blocking.
@@ -70,8 +71,8 @@ public:
      */
     [[clang::release_capability()]] void unlock() noexcept
     {
-        // Use release semantics to ensure that all prior write have been fully commited before we unlock
-        locked.store(false,std::memory_order_release);
+        // Use release semantics to ensure that all prior write have been fully committed before we unlock
+        locked.store(false, std::memory_order_release);
     }
 
 private:

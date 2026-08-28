@@ -6,8 +6,8 @@
 #include <catch2/catch_all.hpp>
 
 #define SPDLOG_SOURCE_LOCATION 1
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/spdlog.h>
 
 #define PORTAL_ACTIVE_LOG_LEVEL PORTAL_LOG_LEVEL_OFF
 #include "portal/core/log_macros.h"
@@ -20,7 +20,10 @@ using portal::log::LogLevel;
 
 // PORTAL_ACTIVE_LOG_LEVEL is forced to Off for this translation unit, so even LOG_FATAL_NAMED
 // must be compiled out.
-SCENARIO("Raising PORTAL_ACTIVE_LEVEL to Off compiles out every LOG_*_NAMED macro, including Fatal", "[unit][core][log][macros]")
+SCENARIO(
+        "Raising PORTAL_ACTIVE_LEVEL to Off compiles out every LOG_*_NAMED macro, including Fatal",
+        "[unit][core][log][macros]"
+)
 {
     GIVEN("a named logger capturing to a stream, with its runtime level left at Trace")
     {

@@ -22,14 +22,16 @@ set(CMAKE_CXX_COMPILER clang++)
 
 if(PORTAL_SANITIZER STREQUAL "MaxSan")
     set(SANITIZER_FLAGS
-            "-fsanitize=address -fsanitize=leak -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined -fsanitize-undefined-trap-on-error"
+        "-fsanitize=address -fsanitize=leak -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined -fsanitize-undefined-trap-on-error"
     )
 elseif(PORTAL_SANITIZER STREQUAL "TSan")
     set(SANITIZER_FLAGS "-fsanitize=thread")
 endif()
 
 set(CMAKE_C_FLAGS_DEBUG_INIT "${SANITIZER_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG_INIT " -Wno-reserved-module-identifier ${SANITIZER_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT
+    " -Wno-reserved-module-identifier ${SANITIZER_FLAGS}"
+)
 
 set(RELEASE_FLAGS "-O3 ${SANITIZER_FLAGS}")
 

@@ -6,10 +6,10 @@
 module;
 
 #define SPDLOG_SOURCE_LOCATION 1
-#include <spdlog/spdlog.h>
+#include <spdlog/cfg/env.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/dist_sink.h>
-#include <spdlog/cfg/env.h>
+#include <spdlog/spdlog.h>
 
 #include "portal/core/log/types.h"
 #include "portal/core/log_macros.h"
@@ -24,9 +24,11 @@ namespace portal::log
 // Format: [date] [#thread_id] [file:line function] [name] colored{[level] message} extra
 constexpr auto default_pattern = "[%Y-%m-%d %H:%M:%S.%f] [%t] [%*] [%-12n] %^[%=7l] %v%$ %&";
 
-Logger::Logger(const std::string& name) : spdlog::logger(name) {}
+Logger::Logger(const std::string& name) : spdlog::logger(name)
+{}
 
-Logger::Logger(const std::string& name, spdlog::sink_ptr sink_ptr):  spdlog::logger(name, std::move(sink_ptr)) {}
+Logger::Logger(const std::string& name, spdlog::sink_ptr sink_ptr) : spdlog::logger(name, std::move(sink_ptr))
+{}
 
 void Logger::enable(const bool enabled)
 {
@@ -137,4 +139,4 @@ void enable_logger(const std::string& logger_name, const bool enable)
             spdlog::apply_logger_env_levels(logger);
     }
 }
-}
+} // namespace portal::log

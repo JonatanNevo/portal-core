@@ -25,7 +25,5 @@ import std;
 
 export namespace portal::platform
 {
-
 spdlog::sink_ptr get_platform_sinks(const std::filesystem::path& log_folder);
-
 }

@@ -6,8 +6,8 @@
 #include <catch2/catch_all.hpp>
 
 #define SPDLOG_SOURCE_LOCATION 1
-#include <spdlog/spdlog.h>
 #include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/spdlog.h>
 
 import portal.core;
 
@@ -28,9 +28,12 @@ portal::log::Logger& make_captured_logger(const std::string& name, std::ostrings
     logger.set_level(LogLevel::Trace);
     return logger;
 }
-}
+} // namespace
 
-SCENARIO("LOG_*_NAMED macros log through the named logger at the default (Info) compile-time threshold", "[unit][core][log][macros]")
+SCENARIO(
+        "LOG_*_NAMED macros log through the named logger at the default (Info) compile-time threshold",
+        "[unit][core][log][macros]"
+)
 {
     GIVEN("a named logger capturing to a stream")
     {

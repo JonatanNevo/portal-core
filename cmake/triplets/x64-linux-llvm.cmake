@@ -4,4 +4,6 @@ set(VCPKG_LIBRARY_LINKAGE static)
 
 set(VCPKG_CMAKE_SYSTEM_NAME Linux)
 
-set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/../toolchains/llvm-toolchain.cmake")
+set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE
+    "${CMAKE_CURRENT_LIST_DIR}/../toolchains/llvm-toolchain.cmake"
+)

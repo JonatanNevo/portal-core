@@ -36,7 +36,7 @@ struct TempDirGuard
         std::filesystem::remove_all(path, ec);
     }
 };
-}
+} // namespace
 
 SCENARIO("Working directory can be read and changed", "[unit][core][filesystem]")
 {

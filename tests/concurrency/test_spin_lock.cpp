@@ -52,12 +52,13 @@ SCENARIO("SpinLock lock blocks until the lock is available", "[unit][core][concu
 
         std::atomic<bool> acquired{false};
         std::thread waiter(
-            [&]
-            {
-                lock.lock();
-                acquired.store(true, std::memory_order_relaxed);
-                lock.unlock();
-            });
+                [&]
+                {
+                    lock.lock();
+                    acquired.store(true, std::memory_order_relaxed);
+                    lock.unlock();
+                }
+        );
 
         THEN("the waiting thread only acquires it after the holder unlocks")
         {
@@ -104,17 +105,18 @@ SCENARIO("SpinLock provides mutual exclusion under contention", "[unit][core][co
         for (int i = 0; i < thread_count; ++i)
         {
             threads.emplace_back(
-                [&]
-                {
-                    for (int j = 0; j < increments_per_thread; ++j)
+                    [&]
                     {
-                        std::lock_guard guard(lock);
-                        ++counter;
+                        for (int j = 0; j < increments_per_thread; ++j)
+                        {
+                            std::lock_guard guard(lock);
+                            ++counter;
+                        }
                     }
-                });
+            );
         }
 
-        for (auto& thread : threads)
+        for (auto& thread: threads)
         {
             thread.join();
         }

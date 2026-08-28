@@ -25,14 +25,20 @@
     },
     {
       "name": "gcc",
-      "inherits": ["base", "ninja-multi"],
+      "inherits": [
+        "base",
+        "ninja-multi"
+      ],
       "cacheVariables": {
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/gnu-toolchain.cmake"
       }
     },
     {
       "name": "llvm",
-      "inherits": ["base", "ninja-multi"],
+      "inherits": [
+        "base",
+        "ninja-multi"
+      ],
       "cacheVariables": {
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/llvm-toolchain.cmake",
         "VCPKG_TARGET_TRIPLET": "x64-linux-llvm"
@@ -40,7 +46,10 @@
     },
     {
       "name": "appleclang",
-      "inherits": ["base", "ninja-multi"],
+      "inherits": [
+        "base",
+        "ninja-multi"
+      ],
       "cacheVariables": {
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/appleclang-toolchain.cmake"
       },
@@ -52,7 +61,10 @@
     },
     {
       "name": "msvc",
-      "inherits": ["base", "ninja-multi"],
+      "inherits": [
+        "base",
+        "ninja-multi"
+      ],
       "cacheVariables": {
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/msvc-toolchain.cmake"
       },

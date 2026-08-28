@@ -6,9 +6,9 @@
 #include <catch2/catch_all.hpp>
 
 #define SPDLOG_SOURCE_LOCATION 1
-#include <spdlog/spdlog.h>
 #include <spdlog/pattern_formatter.h>
 #include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/spdlog.h>
 
 import portal.core;
 import portal.core.log.platform;
@@ -16,8 +16,14 @@ import std;
 
 // Captures `call`'s output and the physical line it executed on, in one statement, so the
 // line reported here always matches the line where the logging call itself appears.
-#define CAPTURE_LOCATION(call) \
-    [&]() -> std::pair<std::string, int> { stream.str(""); call; logger.flush(); return {stream.str(), __LINE__}; }()
+#define CAPTURE_LOCATION(call)                                                                                         \
+    [&]() -> std::pair<std::string, int>                                                                               \
+    {                                                                                                                  \
+        stream.str("");                                                                                                \
+        call;                                                                                                          \
+        logger.flush();                                                                                                \
+        return {stream.str(), __LINE__};                                                                               \
+    }()
 
 using portal::log::LogLevel;
 
@@ -178,7 +184,10 @@ SCENARIO("Logger captures the caller's source_location for every level and log()
         const auto expect_here = [](const std::pair<std::string, int>& result)
         {
             INFO("captured location: " << result.first);
-            REQUIRE_THAT(result.first, Catch::Matchers::ContainsSubstring("test_log.cpp:" + std::to_string(result.second)));
+            REQUIRE_THAT(
+                    result.first,
+                    Catch::Matchers::ContainsSubstring("test_log.cpp:" + std::to_string(result.second))
+            );
         };
 
         THEN("the message-only overload captures the call site for every level")

@@ -11,19 +11,19 @@ export namespace portal
 {
 namespace details
 {
-    template <class... Ts>
+    template<class... Ts>
     struct visitor : Ts...
     {
         using Ts::operator()...;
     };
 
-    template <class... Ts>
+    template<class... Ts>
     visitor(Ts...) -> visitor<Ts...>;
-}
+} // namespace details
 
-template <typename Variant, class... Matchers>
+template<typename Variant, class... Matchers>
 void match(Variant&& variant, Matchers&&... matchers)
 {
     std::visit(details::visitor{std::forward<Matchers>(matchers)...}, std::forward<Variant>(variant));
 }
-}
+} // namespace portal
