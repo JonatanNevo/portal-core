@@ -21,11 +21,13 @@ private:
     size_t width_;
 
 public:
-    explicit source_location_flag_formatter(const size_t width = 30) : width_(width) {}
+    constexpr static auto DEFAULT_WIDTH = 30u;
+
+    explicit source_location_flag_formatter(size_t width = DEFAULT_WIDTH) : width_(width) {}
 
     void format(const spdlog::details::log_msg& msg, const std::tm&, spdlog::memory_buf_t& dest) override
     {
-        if (msg.source.filename && msg.source.line > 0)
+        if ((msg.source.filename != nullptr) && msg.source.line > 0)
         {
             // Extract filename from a full path manually
             const std::string full_path = msg.source.filename;

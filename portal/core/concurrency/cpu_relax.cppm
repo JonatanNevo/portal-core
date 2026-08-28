@@ -7,7 +7,7 @@ module;
 
 #include "portal/core/core_includes.h"
 
-#if defined(PORTAL_ARCHITECTURE_X86)
+#ifdef PORTAL_ARCHITECTURE_X86
 #include <immintrin.h>
 #endif
 

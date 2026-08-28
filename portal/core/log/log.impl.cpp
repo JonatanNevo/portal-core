@@ -64,7 +64,7 @@ void init(const Config& config)
 
     // Create a custom formatter and register the custom flag
     auto formatter = std::make_unique<spdlog::pattern_formatter>();
-    formatter->add_flag<source_location_flag_formatter>('*', 30);
+    formatter->add_flag<source_location_flag_formatter>('*', source_location_flag_formatter::DEFAULT_WIDTH);
     formatter->set_pattern(default_pattern);
 
     spdlog::set_formatter(std::move(formatter));

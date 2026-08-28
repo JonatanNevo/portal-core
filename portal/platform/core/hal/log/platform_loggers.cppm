@@ -11,11 +11,11 @@ module;
 
 export module portal.core.log.platform;
 
-#if defined(PORTAL_PLATFORM_WINDOWS)
+#ifdef PORTAL_PLATFORM_WINDOWS
 export import :windows;
-#elif defined(PORTAL_PLATFORM_MACOS)
+#elifdef PORTAL_PLATFORM_MACOS
 export import :macos;
-#elif defined(PORTAL_PLATFORM_LINUX)
+#elifdef PORTAL_PLATFORM_LINUX
 export import :linux;
 #else
 #error "Invalid Platform"
