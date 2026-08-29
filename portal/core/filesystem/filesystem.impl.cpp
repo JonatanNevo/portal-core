@@ -18,10 +18,9 @@ namespace portal::filesystem
 {
 namespace
 {
-    auto& logger = portal::log::get_logger(
-            "portal::filesystem"
-    ); // NOLINT (cppcoreguidelines-avoid-non-const-global-variables)
-}
+    // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
+    auto& logger = portal::log::get_logger("portal::filesystem");
+} // namespace
 
 std::filesystem::path get_working_directory()
 {

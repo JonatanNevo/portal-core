@@ -176,4 +176,94 @@ bool open_externally(const std::filesystem::path& path)
     return true;
 }
 
+SpinLock Environment::lock;
+
+std::optional<std::string> Environment::get(const std::string& name)
+{
+    const std::unique_lock guard(lock);
+    char* value = nullptr;
+    size_t len = 0;
+
+    if (_dupenv_s(&value, &len, name.c_str()) == 0 && value != nullptr)
+    {
+        std::string result(value);
+        free(value); // Free the allocated memory
+        return result;
+    }
+    return std::nullopt;
+}
+
+std::string Environment::get(const std::string& name, const std::string& default_value)
+{
+    auto val = get(name);
+    if (!val)
+        return default_value;
+
+    return *val;
+}
+
+bool Environment::has(const std::string& name)
+{
+    const std::unique_lock guard(lock);
+
+    HKEY hKey;
+    LSTATUS lOpenStatus = RegOpenKeyExA(HKEY_CURRENT_USER, "Environment", 0, KEY_ALL_ACCESS, &hKey);
+
+    if (lOpenStatus == ERROR_SUCCESS)
+    {
+        lOpenStatus = RegQueryValueExA(hKey, name.c_str(), 0, NULL, NULL, NULL);
+        RegCloseKey(hKey);
+    }
+
+    return lOpenStatus == ERROR_SUCCESS;
+}
+
+std::expected<void, std::error_code> Environment::set(const std::string& name, const std::string& value)
+{
+    const std::unique_lock guard(lock);
+
+    HKEY hKey;
+    const auto key_path = "Environment";
+    DWORD create_new_key;
+    const LSTATUS lOpenStatus = RegCreateKeyExA(
+            HKEY_CURRENT_USER,
+            key_path,
+            0,
+            nullptr,
+            REG_OPTION_NON_VOLATILE,
+            KEY_ALL_ACCESS,
+            nullptr,
+            &hKey,
+            &create_new_key
+    );
+    if (lOpenStatus == ERROR_SUCCESS)
+    {
+        const LSTATUS lSetStatus = RegSetValueExA(
+                hKey,
+                name.c_str(),
+                0,
+                REG_SZ,
+                (LPBYTE) value.c_str(),
+                static_cast<DWORD>(value.length() + 1)
+        );
+        RegCloseKey(hKey);
+
+        if (lSetStatus == ERROR_SUCCESS)
+        {
+            SendMessageTimeoutA(
+                    HWND_BROADCAST,
+                    WM_SETTINGCHANGE,
+                    0,
+                    reinterpret_cast<LPARAM>("Environment"),
+                    SMTO_BLOCK,
+                    100,
+                    nullptr
+            );
+            return true;
+        }
+    }
+
+    return std::unexpected{std::error_code{lOpenStatus, std::generic_category()}};
+}
+
 } // namespace portal::os

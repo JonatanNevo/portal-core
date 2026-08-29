@@ -5,6 +5,7 @@
 export module portal.core.os.platform;
 
 import std;
+import portal.core.concurrency;
 
 export namespace portal::os
 {
@@ -65,4 +66,33 @@ bool open_directory_in_explorer(const std::filesystem::path& path);
  */
 bool show_file_in_explorer(const std::filesystem::path& path);
 
-}
+/// This class provides access to environment variables
+/// and some general system information.
+class Environment
+{
+public:
+    /**
+     * Returns the value of the environment variable `name`, or an empty string
+     * if it is not defined.
+     */
+    [[nodiscard]] static std::optional<std::string> get(const std::string& name);
+
+    /**
+     * Returns the value of the environment variable `name` or the default_value if it does not exist
+     */
+    [[nodiscard]] static std::string get(const std::string& name, const std::string& default_value);
+
+    /**
+     * returns true iff an environment variable with the given name exists
+     */
+    [[nodiscard]] static bool has(const std::string& name);
+
+    /**
+     * Sets the environment variable with the given name to the given value.
+    */
+    static std::expected<void, std::error_code> set(const std::string& name, const std::string& value);
+
+private:
+    static SpinLock lock;
+};
+} // namespace portal::os

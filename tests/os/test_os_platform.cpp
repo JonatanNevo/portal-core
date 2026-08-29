@@ -8,10 +8,21 @@
 import portal.core;
 import std;
 
+using portal::os::Environment;
 using portal::os::ProcessCommand;
 
 namespace
 {
+
+// A process-unique environment variable name so parallel test binaries and
+// repeated runs never collide on real environment state.
+std::string unique_env_name()
+{
+    static const std::uint64_t salt = std::random_device{}();
+    static std::atomic<std::uint64_t> counter{0};
+    return std::format("PORTAL_OS_TEST_{:X}_{}", salt, counter.fetch_add(1));
+}
+
 
 // Installs a capturing runner for the lifetime of the object and restores the
 // platform default afterwards. `result` is what the fake runner reports for
@@ -189,3 +200,66 @@ SCENARIO("os_platform open functions build the expected command", "[unit][core][
 
     std::filesystem::remove_all(dir);
 }
+
+SCENARIO("Environment reports missing variables consistently", "[unit][core][os]")
+{
+    const auto name = unique_env_name();
+
+    GIVEN("a variable that is not defined")
+    {
+        REQUIRE_FALSE(Environment::has(name));
+
+        THEN("get returns nullopt")
+        {
+            REQUIRE_FALSE(Environment::get(name).has_value());
+        }
+
+        THEN("get with a default returns the default")
+        {
+            REQUIRE(Environment::get(name, "fallback") == "fallback");
+        }
+    }
+}
+
+// set() on Windows writes to the user registry rather than the current
+// process environment, so the round-trip below only holds on POSIX.
+#if !defined(_WIN32)
+SCENARIO("Environment set makes a variable readable", "[unit][core][os]")
+{
+    const auto name = unique_env_name();
+
+    WHEN("a variable is set")
+    {
+        const auto result = Environment::set(name, "value-1");
+        REQUIRE(result.has_value());
+
+        THEN("has, get and get-with-default all observe it")
+        {
+            REQUIRE(Environment::has(name));
+            REQUIRE(Environment::get(name) == "value-1");
+            REQUIRE(Environment::get(name, "fallback") == "value-1");
+        }
+
+        AND_WHEN("the variable is overwritten")
+        {
+            REQUIRE(Environment::set(name, "value-2").has_value());
+
+            THEN("the new value is returned")
+            {
+                REQUIRE(Environment::get(name) == "value-2");
+            }
+        }
+
+        AND_WHEN("the variable is set to an empty string")
+        {
+            REQUIRE(Environment::set(name, "").has_value());
+
+            THEN("it still exists and reads back empty")
+            {
+                REQUIRE(Environment::has(name));
+                REQUIRE(Environment::get(name) == "");
+            }
+        }
+    }
+}
+#endif

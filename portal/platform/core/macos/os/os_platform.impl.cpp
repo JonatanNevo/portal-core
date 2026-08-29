@@ -186,4 +186,46 @@ bool show_file_in_explorer(const std::filesystem::path& path)
     return run_process({.executable = "open", .arguments = {"-R", resolved->string()}});
 }
 
+SpinLock Environment::lock;
+
+std::optional<std::string> Environment::get(const std::string& name)
+{
+    const std::unique_lock guard(lock);
+
+    const char* val = std::getenv(name.c_str()); // NOLINT(concurrency-mt-unsafe)
+    if (val == nullptr)
+        return std::nullopt;
+
+    return {val};
+}
+
+std::string Environment::get(const std::string& name, const std::string& default_value)
+{
+    auto val = get(name);
+    if (!val)
+        return default_value;
+
+    return *val;
+}
+
+bool Environment::has(const std::string& name)
+{
+    const std::unique_lock guard(lock);
+
+    return std::getenv(name.c_str()) != nullptr; // NOLINT(concurrency-mt-unsafe)
+}
+
+std::expected<void, std::error_code> Environment::set(const std::string& name, const std::string& value)
+{
+    const std::unique_lock guard(lock);
+
+    const auto res = ::setenv(name.c_str(), value.c_str(), 1); // NOLINT(concurrency-mt-unsafe)
+    if (res != 0)
+    {
+        return std::unexpected{std::error_code{errno, std::generic_category()}};
+    }
+
+    return {};
+}
+
 } // namespace portal::os
