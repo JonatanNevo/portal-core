@@ -12,7 +12,7 @@
 // This might break with newer spdlog versions,
 // that's why there is a unit test that checks compatibility
 
-//NOLINTBEGIN (modernize-macro-to-enum)
+// NOLINTBEGIN (modernize-macro-to-enum)
 #define PORTAL_LOG_LEVEL_TRACE 0
 #define PORTAL_LOG_LEVEL_DEBUG 1
 #define PORTAL_LOG_LEVEL_INFO 2
@@ -20,7 +20,7 @@
 #define PORTAL_LOG_LEVEL_ERROR 4
 #define PORTAL_LOG_LEVEL_FATAL 5
 #define PORTAL_LOG_LEVEL_OFF 6
-//NOLINTEND (modernize-macro-to-enum)
+// NOLINTEND (modernize-macro-to-enum)
 
 namespace portal::log
 {

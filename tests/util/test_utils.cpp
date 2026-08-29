@@ -109,7 +109,7 @@ SCENARIO("A variant class works with the portal::match", "[unit][core][util]")
 
     GIVEN("A const variant")
     {
-        constexpr std::variant<int, std::string> some_variant = std::string{"const"};
+        const std::variant<int, std::string> some_variant = std::string{"const"};
 
         WHEN("match is called on it")
         {

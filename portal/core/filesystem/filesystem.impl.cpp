@@ -18,7 +18,9 @@ namespace portal::filesystem
 {
 namespace
 {
-    auto& logger = portal::log::get_logger("Filesystem"); // NOLINT (cppcoreguidelines-avoid-non-const-global-variables)
+    auto& logger = portal::log::get_logger(
+            "portal::filesystem"
+    ); // NOLINT (cppcoreguidelines-avoid-non-const-global-variables)
 }
 
 std::filesystem::path get_working_directory()
@@ -297,7 +299,7 @@ std::expected<std::vector<std::byte>, std::error_code> read_chunk(
     std::vector<std::byte> buffer(count);
     file.seekg(static_cast<std::streamsize>(offset), std::ios::beg);
     file.read(reinterpret_cast<std::istream::char_type*>(buffer.data()), static_cast<std::streamsize>(count));
-    return std::move(buffer);
+    return buffer;
 }
 
 std::expected<std::vector<std::byte>, std::error_code> read_file_binary(const std::filesystem::path& path)

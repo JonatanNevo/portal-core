@@ -33,14 +33,17 @@ bool exists(const std::string& file_path);
         const std::filesystem::path& from,
         const std::filesystem::path& to
 );
+
 [[nodiscard]] std::expected<void, std::error_code> copy(
         const std::filesystem::path& from,
         const std::filesystem::path& to
 );
+
 [[nodiscard]] std::expected<void, std::error_code> rename(
         const std::filesystem::path& from,
         const std::filesystem::path& to
 );
+
 [[nodiscard]] std::expected<void, std::error_code> rename_filename(
         const std::filesystem::path& path,
         const std::string& new_name

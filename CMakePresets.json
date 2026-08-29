@@ -7,7 +7,7 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_STANDARD": "26",
         "CMAKE_CXX_EXTENSIONS": false,
         "CMAKE_CXX_STANDARD_REQUIRED": true,
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,

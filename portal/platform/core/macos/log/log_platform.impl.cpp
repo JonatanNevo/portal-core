@@ -10,11 +10,11 @@ module;
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-export module portal.core.log.platform:linux;
+module portal.core.log.platform;
 
 import std;
 
-export namespace portal::platform
+namespace portal::platform
 {
 spdlog::sink_ptr get_platform_sinks(const std::filesystem::path& log_folder)
 {

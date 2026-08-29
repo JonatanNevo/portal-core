@@ -10,30 +10,19 @@ include(cmake/tests_helpers.cmake)
 
 file(READ "VERSION.txt" PROJECT_VERSION)
 string(STRIP "${PROJECT_VERSION}" PROJECT_VERSION)
-project(
-    portal-core
-    DESCRIPTION "A template for creating portal libraries"
-    LANGUAGES CXX
-    VERSION ${PROJECT_VERSION}
-)
+project(portal-core DESCRIPTION "A template for creating portal libraries" LANGUAGES CXX VERSION ${PROJECT_VERSION})
 
 message(STATUS "Configuring ${PROJECT_NAME} - version: ${PROJECT_VERSION}")
 
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy" "clang-tidy-15" "clang-tidy-14")
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 
 if(NOT CLANG_TIDY_EXE)
     message(WARNING "clang-tidy executable not found!")
 endif()
 
-# Run clang-tidy only on first-party targets. Setting CMAKE_CXX_CLANG_TIDY
-# globally also lints CMake's std module target and the vcpkg-sourced
-# glm-module, whose generated .cppm files we do not own.
 function(portal_enable_clang_tidy target)
-    if(CLANG_TIDY_EXE)
-        set_target_properties(
-            ${target}
-            PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE}"
-        )
+    if(CLANG_TIDY_EXE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set_target_properties(${target} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
     endif()
 endfunction()
 
@@ -63,18 +52,11 @@ find_package(Microsoft.GSL CONFIG REQUIRED)
 # vcpkg's glm port ships glm/glm.cppm (g-truc/glm#1208) but glmConfig.cmake only
 # exports header-only imported targets, not a compiled module target. Build one
 # ourselves from the shipped source file so `import glm;` works.
-get_target_property(
-    GLM_INCLUDE_DIR
-    glm::glm-header-only
-    INTERFACE_INCLUDE_DIRECTORIES
-)
+get_target_property(GLM_INCLUDE_DIR glm::glm-header-only INTERFACE_INCLUDE_DIRECTORIES)
 add_library(glm-module STATIC)
 target_sources(
     glm-module
-    PUBLIC
-        FILE_SET CXX_MODULES
-            FILES "${GLM_INCLUDE_DIR}/glm/glm.cppm"
-            BASE_DIRS "${GLM_INCLUDE_DIR}"
+    PUBLIC FILE_SET CXX_MODULES FILES "${GLM_INCLUDE_DIR}/glm/glm.cppm" BASE_DIRS "${GLM_INCLUDE_DIR}"
 )
 target_link_libraries(glm-module PUBLIC glm::glm)
 target_compile_features(glm-module PUBLIC cxx_std_23)
@@ -94,78 +76,31 @@ file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS "portal/core/*.cpp")
 file(GLOB_RECURSE CORE_MODULES CONFIGURE_DEPENDS "portal/core/*.cppm")
 file(GLOB_RECURSE CORE_HEADERS CONFIGURE_DEPENDS "portal/core/*.h")
 
-file(
-    GLOB_RECURSE HAL_MODULES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/hal/*.cppm"
-)
+file(GLOB_RECURSE HAL_MODULES CONFIGURE_DEPENDS "portal/platform/core/hal/*.cppm")
 
-file(
-    GLOB_RECURSE CORE_WINDOWS_SOURCES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/windows/*.cpp"
-)
-file(
-    GLOB_RECURSE CORE_WINDOWS_MODULES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/windows/*.cppm"
-)
-file(
-    GLOB_RECURSE CORE_WINDOWS_HEADERS
-    CONFIGURE_DEPENDS
-    "portal/platform/core/windows/*.h"
-)
+file(GLOB_RECURSE CORE_WINDOWS_SOURCES CONFIGURE_DEPENDS "portal/platform/core/windows/*.cpp")
+file(GLOB_RECURSE CORE_WINDOWS_MODULES CONFIGURE_DEPENDS "portal/platform/core/windows/*.cppm")
+file(GLOB_RECURSE CORE_WINDOWS_HEADERS CONFIGURE_DEPENDS "portal/platform/core/windows/*.h")
 
-file(
-    GLOB_RECURSE CORE_MACOS_SOURCES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/macos/*.cpp"
-)
-file(
-    GLOB_RECURSE CORE_MACOS_MODULES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/macos/*.cppm"
-)
-file(
-    GLOB_RECURSE CORE_MACOS_HEADERS
-    CONFIGURE_DEPENDS
-    "portal/platform/core/macos/*.h"
-)
+file(GLOB_RECURSE CORE_MACOS_SOURCES CONFIGURE_DEPENDS "portal/platform/core/macos/*.cpp")
+file(GLOB_RECURSE CORE_MACOS_MODULES CONFIGURE_DEPENDS "portal/platform/core/macos/*.cppm")
+file(GLOB_RECURSE CORE_MACOS_HEADERS CONFIGURE_DEPENDS "portal/platform/core/macos/*.h")
 
-file(
-    GLOB_RECURSE CORE_LINUX_SOURCES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/linux/*.cpp"
-)
-file(
-    GLOB_RECURSE CORE_LINUX_MODULES
-    CONFIGURE_DEPENDS
-    "portal/platform/core/linux/*.cppm"
-)
-file(
-    GLOB_RECURSE CORE_LINUX_HEADERS
-    CONFIGURE_DEPENDS
-    "portal/platform/core/linux/*.h"
-)
+file(GLOB_RECURSE CORE_LINUX_SOURCES CONFIGURE_DEPENDS "portal/platform/core/linux/*.cpp")
+file(GLOB_RECURSE CORE_LINUX_MODULES CONFIGURE_DEPENDS "portal/platform/core/linux/*.cppm")
+file(GLOB_RECURSE CORE_LINUX_HEADERS CONFIGURE_DEPENDS "portal/platform/core/linux/*.h")
 
 add_library(portal-core STATIC)
 target_sources(
     portal-core
     PRIVATE ${CORE_SOURCES}
     PUBLIC FILE_SET CXX_MODULES FILES ${CORE_MODULES} ${HAL_MODULES}
-    PUBLIC
-        FILE_SET HEADERS
-            FILES ${CORE_HEADERS}
-            BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+    PUBLIC FILE_SET HEADERS FILES ${CORE_HEADERS} BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
 )
 set_target_properties(portal-core PROPERTIES CXX_MODULE_STD ON)
 portal_enable_clang_tidy(portal-core)
 target_compile_features(portal-core PUBLIC cxx_std_23)
-target_link_libraries(
-    portal-core
-    PUBLIC glm-module
-    PRIVATE spdlog::spdlog nfd::nfd Microsoft.GSL::GSL
-)
+target_link_libraries(portal-core PUBLIC glm-module PRIVATE spdlog::spdlog nfd::nfd Microsoft.GSL::GSL)
 
 if(WIN32)
     if(CORE_WINDOWS_SOURCES OR CORE_WINDOWS_HEADERS OR CORE_WINDOWS_MODULES)
@@ -173,10 +108,7 @@ if(WIN32)
             portal-core
             PRIVATE ${CORE_WINDOWS_SOURCES}
             PUBLIC FILE_SET CXX_MODULES FILES ${CORE_WINDOWS_MODULES}
-            PUBLIC
-                FILE_SET HEADERS
-                    FILES ${CORE_WINDOWS_HEADERS}
-                    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+            PUBLIC FILE_SET HEADERS FILES ${CORE_WINDOWS_HEADERS} BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         )
     endif()
 elseif(APPLE)
@@ -185,10 +117,7 @@ elseif(APPLE)
             portal-core
             PRIVATE ${CORE_MACOS_SOURCES}
             PUBLIC FILE_SET CXX_MODULES FILES ${CORE_MACOS_MODULES}
-            PUBLIC
-                FILE_SET HEADERS
-                    FILES ${CORE_MACOS_HEADERS}
-                    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+            PUBLIC FILE_SET HEADERS FILES ${CORE_MACOS_HEADERS} BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         )
     endif()
 elseif(UNIX)
@@ -197,10 +126,7 @@ elseif(UNIX)
             portal-core
             PRIVATE ${CORE_LINUX_SOURCES}
             PUBLIC FILE_SET CXX_MODULES FILES ${CORE_LINUX_MODULES}
-            PUBLIC
-                FILE_SET HEADERS
-                    FILES ${CORE_LINUX_HEADERS}
-                    BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+            PUBLIC FILE_SET HEADERS FILES ${CORE_LINUX_HEADERS} BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
         )
     endif()
 else()
@@ -212,14 +138,11 @@ if(MSVC)
 else()
     target_compile_options(
         portal-core
-        PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-            -Werror
-            -Wno-missing-designated-field-initializers
-            -Wthread-safety
+        PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-missing-designated-field-initializers -Wno-error=attributes
     )
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(portal-core PRIVATE -Wthread-safety)
+    endif()
 endif()
 
 target_compile_definitions(

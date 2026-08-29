@@ -9,10 +9,9 @@
 #include <spdlog/sinks/ostream_sink.h>
 #include <spdlog/spdlog.h>
 
-import portal.core;
-
 #include "portal/core/log_macros.h"
 
+import portal.core;
 import std;
 
 using portal::log::LogLevel;
