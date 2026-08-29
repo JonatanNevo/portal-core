@@ -8,31 +8,14 @@ function(portal_load_env_file)
     if(EXISTS "${_portal_env_file}")
         file(STRINGS "${_portal_env_file}" _portal_env_lines)
         foreach(_portal_env_line IN LISTS _portal_env_lines)
-            if(
-                _portal_env_line MATCHES "^[ \t]*#"
-                OR _portal_env_line STREQUAL ""
-            )
+            if(_portal_env_line MATCHES "^[ \t]*#" OR _portal_env_line STREQUAL "")
                 continue()
             endif()
-            if(
-                _portal_env_line
-                    MATCHES
-                    "^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=(.*)$"
-            )
+            if(_portal_env_line MATCHES "^[ \t]*([A-Za-z_][A-Za-z0-9_]*)[ \t]*=(.*)$")
                 set(_portal_env_key "${CMAKE_MATCH_1}")
                 set(_portal_env_val "${CMAKE_MATCH_2}")
-                string(
-                    REGEX REPLACE "^\"(.*)\"$"
-                    "\\1"
-                    _portal_env_val
-                    "${_portal_env_val}"
-                )
-                string(
-                    REGEX REPLACE "^'(.*)'$"
-                    "\\1"
-                    _portal_env_val
-                    "${_portal_env_val}"
-                )
+                string(REGEX REPLACE "^\"(.*)\"$" "\\1" _portal_env_val "${_portal_env_val}")
+                string(REGEX REPLACE "^'(.*)'$" "\\1" _portal_env_val "${_portal_env_val}")
                 if(NOT DEFINED ENV{${_portal_env_key}})
                     set(ENV{${_portal_env_key}} "${_portal_env_val}")
                 endif()

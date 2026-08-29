@@ -12,6 +12,7 @@
       <file path="$PROJECT_DIR$/vcpkg/buildtrees" />
     </libraryRoots>
     <excludeRoots>
+      <file path="$PROJECT_DIR$/build" />
       <file path="$PROJECT_DIR$/vcpkg" />
       <file path="$PROJECT_DIR$/vcpkg/.github" />
       <file path="$PROJECT_DIR$/vcpkg/docs" />
