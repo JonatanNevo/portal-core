@@ -17,6 +17,14 @@ constexpr auto ACTIVE_LOG_LEVEL = static_cast<LogLevel>(PORTAL_ACTIVE_LOG_LEVEL)
 }
 
 
+#define DECLARE_LOGGER(name)                                                                                           \
+    namespace                                                                                                          \
+    {                                                                                                                  \
+        /* NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables) */                                      \
+        auto& logger = portal::log::get_logger(name);                                                                  \
+    } // namespace
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Named logs (prefer these!)                                                                                       //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -109,4 +109,20 @@ std::filesystem::path save_file_dialog(
     return result_path;
 }
 
+namespace
+{
+    // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
+    std::filesystem::path s_binary_path;
+} // namespace
+
+void set_binary_path(const std::filesystem::path& path)
+{
+    s_binary_path = path;
+}
+
+std::filesystem::path get_binary_path()
+{
+    return s_binary_path;
+}
+
 } // namespace portal::os

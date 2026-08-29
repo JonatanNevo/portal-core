@@ -16,11 +16,7 @@ import portal.core.log;
 
 namespace portal::filesystem
 {
-namespace
-{
-    // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
-    auto& logger = portal::log::get_logger("portal::filesystem");
-} // namespace
+DECLARE_LOGGER("portal::filesystem")
 
 std::filesystem::path get_working_directory()
 {
