@@ -4,7 +4,7 @@
 //
 export module portal.core.os.platform;
 
-import std;
+import std.compat;
 import portal.core.concurrency;
 
 export namespace portal::os
@@ -48,6 +48,40 @@ bool run_process(const ProcessCommand& command);
  * platform default. Not thread-safe: intended for tests and one-off setup.
  */
 void set_process_runner(ProcessRunner runner);
+
+/**
+ * The result of a finished process: its exit code together with whatever it
+ * wrote to stdout (trailing newlines trimmed). Produced by run_process_captured.
+ */
+struct ProcessOutput
+{
+    int exit_code = -1;
+    std::string output;
+
+    bool operator==(const ProcessOutput&) const = default;
+};
+
+/**
+ * A process launcher that also reports the child's stdout. Returns std::nullopt
+ * when the executable could not be spawned (for example, it is not installed).
+ * Mirrors ProcessRunner; install one with set_captured_process_runner.
+ */
+using CapturedProcessRunner = std::function<std::optional<ProcessOutput>(const ProcessCommand& command)>;
+
+/**
+ * Runs a command to completion and returns its exit code plus captured stdout,
+ * or std::nullopt when it could not be launched. open_message_box uses this to
+ * read back which button the user pressed. Each platform provides its own
+ * implementation; a runner installed via set_captured_process_runner overrides
+ * it.
+ */
+std::optional<ProcessOutput> run_process_captured(const ProcessCommand& command);
+
+/**
+ * Overrides the launcher used by run_process_captured. Pass a null runner to
+ * restore the platform default. Not thread-safe: intended for tests.
+ */
+void set_captured_process_runner(CapturedProcessRunner runner);
 
 /**
  * Opens `path` with the desktop's default handler (xdg-open / `open` / the shell
@@ -95,6 +129,50 @@ public:
 private:
     static SpinLock lock;
 };
+
+enum class MessageBoxType : uint8_t
+{
+    OK,
+    OKCancel,
+    YesNo,
+    YesNoCancel
+};
+
+enum class IconType : uint8_t
+{
+    Info,
+    Warning,
+    Error,
+    Question
+};
+
+/**
+ * The button the user pressed in a message box. A box that offers fewer buttons
+ * can only ever return that subset (an OK box returns OK; a YesNo box returns
+ * Yes or No). Cancel is also reported when the box is dismissed by the window
+ * manager or no backend was available.
+ */
+enum class MessageBoxButton : uint8_t
+{
+    OK,
+    Cancel,
+    Yes,
+    No
+};
+
+/**
+ * Shows a transient desktop notification ("toast") with the given title, message
+ * and icon. When no notification service is reachable it falls back to a modal
+ * message box. Returns true when a backend accepted the request.
+ */
+bool open_notification_popup(std::string_view title, std::string_view message, IconType icon);
+
+/**
+ * Shows a modal message box and blocks until the user answers, returning the
+ * button that was pressed. A dismissed box, or one shown when no backend is
+ * available, reports OK for an OK box and Cancel for every other type.
+ */
+MessageBoxButton open_message_box(std::string_view title, std::string_view message, MessageBoxType type, IconType icon);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////// Program Data Paths ////////////////////////////////////////////////////////////////

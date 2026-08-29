@@ -57,4 +57,5 @@ Checks: >
   -readability-trailing-comma,
   -readability-uppercase-literal-suffix
 HeaderFilterRegex: 'portal/.*'
+WarningsAsErrors: "*"
 ExcludeHeaderFilterRegex: '.*/(build|vcpkg_installed|vcpkg|third_party)/.*'

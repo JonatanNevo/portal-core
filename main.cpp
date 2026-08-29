@@ -10,11 +10,17 @@ int main()
 {
     try
     {
-        portal::os::show_file_in_explorer("/home/jonatann/code/portal-core/main.cpp");
-        portal::os::open_directory_in_explorer("/home/jonatann/code/portal-core/");
-        portal::os::open_directory_in_explorer("/home/jonatann/.config");
-        portal::os::open_externally("/home/jonatann/.config");
-        portal::os::open_externally("/usr/bin/firefox");
+        portal::os::open_message_box(
+                "Hello World",
+                "This is a message box",
+                portal::os::MessageBoxType::YesNoCancel,
+                portal::os::IconType::Error
+        );
+        portal::os::open_notification_popup(
+                "This is a notification popup",
+                "wow so message",
+                portal::os::IconType::Info
+        );
     }
     catch (...)
     {

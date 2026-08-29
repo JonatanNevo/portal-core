@@ -6,7 +6,10 @@
 module;
 
 #include <cerrno>
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <fcntl.h>
 #include <pwd.h>
 #include <spawn.h>
 #include <sys/wait.h>
@@ -65,6 +68,138 @@ namespace
     // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
     ProcessRunner g_process_runner;
 
+    // Owns a file descriptor and closes it on destruction.
+    class UniqueFd
+    {
+    public:
+        UniqueFd() = default;
+        explicit UniqueFd(const int fd) : m_fd(fd) {}
+
+        UniqueFd(const UniqueFd&) = delete;
+        UniqueFd& operator=(const UniqueFd&) = delete;
+        UniqueFd(UniqueFd&& other) noexcept : m_fd(std::exchange(other.m_fd, -1)) {}
+        UniqueFd& operator=(UniqueFd&& other) noexcept
+        {
+            if (this != &other)
+            {
+                reset();
+                m_fd = std::exchange(other.m_fd, -1);
+            }
+            return *this;
+        }
+        ~UniqueFd() { reset(); }
+
+        [[nodiscard]] int get() const { return m_fd; }
+
+        void reset()
+        {
+            if (m_fd >= 0)
+            {
+                ::close(m_fd);
+                m_fd = -1;
+            }
+        }
+
+    private:
+        int m_fd = -1;
+    };
+
+    // RAII wrapper around posix_spawn_file_actions_t.
+    class SpawnFileActions
+    {
+    public:
+        SpawnFileActions() { posix_spawn_file_actions_init(&m_actions); }
+
+        SpawnFileActions(const SpawnFileActions&) = delete;
+        SpawnFileActions& operator=(const SpawnFileActions&) = delete;
+        ~SpawnFileActions() { posix_spawn_file_actions_destroy(&m_actions); }
+
+        [[nodiscard]] posix_spawn_file_actions_t* get() { return &m_actions; }
+
+    private:
+        posix_spawn_file_actions_t m_actions{};
+    };
+
+    constexpr std::size_t BUFFER_SIZE = 4096;
+
+    std::optional<ProcessOutput> default_run_process_captured(const ProcessCommand& command)
+    {
+        std::array<int, 2> raw_pipe{-1, -1};
+        if (::pipe(raw_pipe.data()) != 0)
+        {
+            // NOLINTNEXTLINE (concurrency-mt-unsafe)
+            LOGGER_WARN("Failed to create a pipe for '{}': {}", command.executable, std::strerror(errno))
+            return std::nullopt;
+        }
+
+        const UniqueFd read_end{raw_pipe[0]};
+        UniqueFd write_end{raw_pipe[1]};
+
+        std::vector<const char*> argv;
+        argv.reserve(command.arguments.size() + 2);
+        argv.push_back(command.executable.c_str());
+        for (const std::string& argument: command.arguments)
+        {
+            argv.push_back(argument.c_str());
+        }
+        argv.push_back(nullptr);
+
+        SpawnFileActions actions;
+        posix_spawn_file_actions_adddup2(actions.get(), write_end.get(), STDOUT_FILENO);
+        posix_spawn_file_actions_addopen(actions.get(), STDERR_FILENO, "/dev/null", O_WRONLY, 0);
+        posix_spawn_file_actions_addclose(actions.get(), read_end.get());
+        posix_spawn_file_actions_addclose(actions.get(), write_end.get());
+
+        pid_t pid{};
+        const int spawn_result = posix_spawnp(
+                &pid,
+                command.executable.c_str(),
+                actions.get(),
+                nullptr,
+                const_cast<char* const*>(argv.data()), // NOLINT (cppcoreguidelines-pro-type-const-cast)
+                environ
+        );
+        if (spawn_result != 0)
+        {
+            return std::nullopt;
+        }
+
+        // Drop our copy of the write end so read() reports EOF once the child exits.
+        write_end.reset();
+
+        std::string output;
+        std::array<char, BUFFER_SIZE> buffer{};
+        while (true)
+        {
+            const ssize_t count = ::read(read_end.get(), buffer.data(), buffer.size());
+            if (count > 0)
+            {
+                output.append(buffer.data(), static_cast<std::size_t>(count));
+            }
+            else if (count == 0 || errno != EINTR)
+            {
+                break;
+            }
+        }
+
+        int status = 0;
+        while (::waitpid(pid, &status, 0) == -1 && errno == EINTR)
+        {}
+
+        while (!output.empty() && (output.back() == '\n' || output.back() == '\r'))
+        {
+            output.pop_back();
+        }
+
+        return ProcessOutput{
+                .exit_code = WIFEXITED(status) ? WEXITSTATUS(status) : -1,
+                .output = std::move(output),
+        };
+    }
+
+    // NOLINTNEXTLINE (cppcoreguidelines-avoid-non-const-global-variables)
+    CapturedProcessRunner g_captured_process_runner;
+
     std::string to_file_uri(const std::filesystem::path& path)
     {
         return std::format("file://{}", path.string());
@@ -99,6 +234,16 @@ bool run_process(const ProcessCommand& command)
 void set_process_runner(ProcessRunner runner)
 {
     g_process_runner = std::move(runner);
+}
+
+std::optional<ProcessOutput> run_process_captured(const ProcessCommand& command)
+{
+    return g_captured_process_runner ? g_captured_process_runner(command) : default_run_process_captured(command);
+}
+
+void set_captured_process_runner(CapturedProcessRunner runner)
+{
+    g_captured_process_runner = std::move(runner);
 }
 
 bool open_externally(const std::filesystem::path& path)
@@ -173,6 +318,323 @@ bool show_file_in_explorer(const std::filesystem::path& path)
     return open_externally(parent_path);
 }
 
+namespace
+{
+    // The freedesktop icon-name matching an IconType, used for notification and
+    // dialog icons across the backends.
+    const char* freedesktop_icon_name(const IconType icon)
+    {
+        switch (icon)
+        {
+            case IconType::Warning:
+                return "dialog-warning";
+            case IconType::Error:
+                return "dialog-error";
+            case IconType::Question:
+                return "dialog-question";
+            case IconType::Info:
+                break;
+        }
+        return "dialog-information";
+    }
+
+    bool is_severe(const IconType icon)
+    {
+        return icon == IconType::Warning || icon == IconType::Error;
+    }
+
+    MessageBoxButton affirmative_button(const MessageBoxType type)
+    {
+        return type == MessageBoxType::OK || type == MessageBoxType::OKCancel ? MessageBoxButton::OK
+                                                                              : MessageBoxButton::Yes;
+    }
+
+    MessageBoxButton negative_button(const MessageBoxType type)
+    {
+        return type == MessageBoxType::YesNo ? MessageBoxButton::No : MessageBoxButton::Cancel;
+    }
+
+    // All backends are launched through ProcessCommand with a real argv, so the
+    // title and message never pass through a shell and need no quoting.
+
+    std::optional<MessageBoxButton> kdialog_message_box(
+            const std::string_view title,
+            const std::string_view message,
+            const MessageBoxType type,
+            const IconType icon
+    )
+    {
+        ProcessCommand command{.executable = "kdialog"};
+        std::vector<std::string>& args = command.arguments;
+
+        switch (type)
+        {
+            case MessageBoxType::OK:
+                if (icon == IconType::Error)
+                {
+                    args.emplace_back("--error");
+                }
+                else if (is_severe(icon))
+                {
+                    args.emplace_back("--sorry");
+                }
+                else
+                {
+                    args.emplace_back("--msgbox");
+                }
+                args.emplace_back(message);
+                break;
+            case MessageBoxType::OKCancel:
+                args.emplace_back(is_severe(icon) ? "--warningyesno" : "--yesno");
+                args.emplace_back(message);
+                args.emplace_back("--yes-label");
+                args.emplace_back("OK");
+                args.emplace_back("--no-label");
+                args.emplace_back("Cancel");
+                break;
+            case MessageBoxType::YesNo:
+                args.emplace_back(is_severe(icon) ? "--warningyesno" : "--yesno");
+                args.emplace_back(message);
+                break;
+            case MessageBoxType::YesNoCancel:
+                args.emplace_back(is_severe(icon) ? "--warningyesnocancel" : "--yesnocancel");
+                args.emplace_back(message);
+                break;
+        }
+
+        if (!title.empty())
+        {
+            args.emplace_back("--title");
+            args.emplace_back(title);
+        }
+        args.emplace_back("--icon");
+        args.emplace_back(freedesktop_icon_name(icon));
+
+        const auto result = run_process_captured(command);
+        if (!result)
+        {
+            return std::nullopt;
+        }
+
+        // kdialog exit codes: 0 = yes/ok, 1 = no, 2 = cancel (or dismissed).
+        if (result->exit_code == 0)
+        {
+            return affirmative_button(type);
+        }
+        if (type == MessageBoxType::YesNoCancel && result->exit_code == 1)
+        {
+            return MessageBoxButton::No;
+        }
+        return negative_button(type);
+    }
+
+    std::optional<MessageBoxButton> zenity_message_box(
+            const std::string_view title,
+            const std::string_view message,
+            const MessageBoxType type,
+            const IconType icon
+    )
+    {
+        ProcessCommand command{.executable = "zenity"};
+        std::vector<std::string>& args = command.arguments;
+
+        switch (type)
+        {
+            case MessageBoxType::OK:
+                if (icon == IconType::Error)
+                {
+                    args.emplace_back("--error");
+                }
+                else if (icon == IconType::Warning)
+                {
+                    args.emplace_back("--warning");
+                }
+                else
+                {
+                    args.emplace_back("--info");
+                }
+                break;
+            case MessageBoxType::OKCancel:
+                args.emplace_back("--question");
+                args.emplace_back("--ok-label=OK");
+                args.emplace_back("--cancel-label=Cancel");
+                break;
+            case MessageBoxType::YesNo:
+                args.emplace_back("--question");
+                args.emplace_back("--ok-label=Yes");
+                args.emplace_back("--cancel-label=No");
+                break;
+            case MessageBoxType::YesNoCancel:
+                args.emplace_back("--question");
+                args.emplace_back("--ok-label=Yes");
+                args.emplace_back("--cancel-label=No");
+                args.emplace_back("--extra-button=Cancel");
+                break;
+        }
+
+        args.emplace_back(std::format("--title={}", title));
+        args.emplace_back(std::format("--text={}", message));
+
+        const auto result = run_process_captured(command);
+        if (!result)
+        {
+            return std::nullopt;
+        }
+
+        // zenity exits 0 when the primary button is pressed. The extra button
+        // prints its own label to stdout and exits non-zero; a plain cancel or a
+        // dismissed dialog exits non-zero with no output.
+        if (type == MessageBoxType::OK || result->exit_code == 0)
+        {
+            return affirmative_button(type);
+        }
+        if (type == MessageBoxType::YesNoCancel && result->output != "Cancel")
+        {
+            return MessageBoxButton::No;
+        }
+        return negative_button(type);
+    }
+
+    std::optional<MessageBoxButton> xmessage_message_box(
+            const std::string_view title,
+            const std::string_view message,
+            const MessageBoxType type
+    )
+    {
+        ProcessCommand command{.executable = "xmessage"};
+        std::vector<std::string>& args = command.arguments;
+        args.emplace_back("-center");
+        args.emplace_back("-buttons");
+        // Button tags: 0 = affirmative, 1 = No, 2 = Cancel. xmessage exits with
+        // the pressed button's tag (a window-manager close also exits 1).
+        switch (type)
+        {
+            case MessageBoxType::OK:
+                args.emplace_back("OK:0");
+                break;
+            case MessageBoxType::OKCancel:
+                args.emplace_back("OK:0,Cancel:2");
+                break;
+            case MessageBoxType::YesNo:
+                args.emplace_back("Yes:0,No:1");
+                break;
+            case MessageBoxType::YesNoCancel:
+                args.emplace_back("Yes:0,No:1,Cancel:2");
+                break;
+        }
+        if (!title.empty())
+        {
+            args.emplace_back("-title");
+            args.emplace_back(title);
+        }
+        args.emplace_back(message.empty() ? std::string{" "} : std::string{message});
+
+        const auto result = run_process_captured(command);
+        if (!result)
+        {
+            return std::nullopt;
+        }
+
+        if (type == MessageBoxType::OK || result->exit_code == 0)
+        {
+            return affirmative_button(type);
+        }
+        if (type == MessageBoxType::YesNoCancel && result->exit_code == 1)
+        {
+            return MessageBoxButton::No;
+        }
+        return negative_button(type);
+    }
+
+    bool notify_send_popup(const std::string_view title, const std::string_view message, const IconType icon)
+    {
+        ProcessCommand command{.executable = "notify-send"};
+        std::vector<std::string>& args = command.arguments;
+        args.emplace_back("--icon");
+        args.emplace_back(freedesktop_icon_name(icon));
+
+        // notify-send needs a non-empty summary; use the message when there is no title.
+        if (title.empty())
+        {
+            args.emplace_back(message.empty() ? std::string{" "} : std::string{message});
+        }
+        else
+        {
+            args.emplace_back(title);
+            if (!message.empty())
+            {
+                args.emplace_back(message);
+            }
+        }
+        return run_process(command);
+    }
+
+    bool kdialog_passive_popup(const std::string_view title, const std::string_view message, const IconType icon)
+    {
+        ProcessCommand command{.executable = "kdialog"};
+        std::vector<std::string>& args = command.arguments;
+        args.emplace_back("--icon");
+        args.emplace_back(freedesktop_icon_name(icon));
+        if (!title.empty())
+        {
+            args.emplace_back("--title");
+            args.emplace_back(title);
+        }
+        args.emplace_back("--passivepopup");
+        args.emplace_back(message);
+        args.emplace_back("5"); // seconds on screen
+        return run_process(command);
+    }
+
+    bool zenity_notification(const std::string_view title, const std::string_view message)
+    {
+        ProcessCommand command{.executable = "zenity"};
+        std::vector<std::string>& args = command.arguments;
+        args.emplace_back("--notification");
+        args.emplace_back(
+                title.empty() ? std::format("--text={}", message) : std::format("--text={}\n{}", title, message)
+        );
+        return run_process(command);
+    }
+
+} // namespace
+
+MessageBoxButton open_message_box(
+        const std::string_view title,
+        const std::string_view message,
+        const MessageBoxType type,
+        const IconType icon
+)
+{
+    if (const auto button = kdialog_message_box(title, message, type, icon))
+    {
+        return *button;
+    }
+    if (const auto button = zenity_message_box(title, message, type, icon))
+    {
+        return *button;
+    }
+    if (const auto button = xmessage_message_box(title, message, type))
+    {
+        return *button;
+    }
+
+    LOGGER_WARN("No message box backend available (tried kdialog, zenity, xmessage)")
+    return type == MessageBoxType::OK ? MessageBoxButton::OK : MessageBoxButton::Cancel;
+}
+
+bool open_notification_popup(const std::string_view title, const std::string_view message, const IconType icon)
+{
+    if (notify_send_popup(title, message, icon) || kdialog_passive_popup(title, message, icon) ||
+        zenity_notification(title, message))
+    {
+        return true;
+    }
+
+    LOGGER_WARN("No notification backend available, falling back to a message box")
+    open_message_box(title, message, MessageBoxType::OK, icon);
+    return true;
+}
 
 SpinLock Environment::lock;
 

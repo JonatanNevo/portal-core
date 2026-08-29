@@ -60,6 +60,32 @@ public:
     ~ScopedRunner() { portal::os::set_process_runner(nullptr); }
 };
 
+// Installs a capturing runner for run_process_captured for the lifetime of the
+// object, restoring the platform default afterwards. `responder` decides what
+// each command reports (std::nullopt means "executable not available").
+class ScopedCapturedRunner
+{
+public:
+    ScopedCapturedRunner(
+            std::vector<ProcessCommand>& sink,
+            std::function<std::optional<portal::os::ProcessOutput>(const ProcessCommand&)> responder
+    )
+    {
+        portal::os::set_captured_process_runner(
+                [&sink, responder = std::move(responder)](const ProcessCommand& command)
+                {
+                    sink.push_back(command);
+                    return responder(command);
+                }
+        );
+    }
+
+    ScopedCapturedRunner(const ScopedCapturedRunner&) = delete;
+    ScopedCapturedRunner& operator=(const ScopedCapturedRunner&) = delete;
+
+    ~ScopedCapturedRunner() { portal::os::set_captured_process_runner(nullptr); }
+};
+
 std::filesystem::path make_temp_dir()
 {
     static const std::uint64_t salt = std::random_device{}();
@@ -220,6 +246,142 @@ SCENARIO("Environment reports missing variables consistently", "[unit][core][os]
         }
     }
 }
+
+#if defined(__linux__)
+
+using portal::os::IconType;
+using portal::os::MessageBoxButton;
+using portal::os::MessageBoxType;
+using portal::os::ProcessOutput;
+
+SCENARIO("open_message_box maps a backend's exit code to the pressed button", "[unit][core][os]")
+{
+    std::vector<ProcessCommand> calls;
+
+    GIVEN("kdialog answers a yes/no box")
+    {
+        THEN("exit 0 is Yes and a non-zero exit is No")
+        {
+            {
+                ScopedCapturedRunner guard(calls, [](const ProcessCommand&) { return ProcessOutput{.exit_code = 0}; });
+                REQUIRE(portal::os::open_message_box("T", "M", MessageBoxType::YesNo, IconType::Info) ==
+                        MessageBoxButton::Yes);
+            }
+            REQUIRE(calls.size() == 1);
+            REQUIRE(calls[0].executable == "kdialog");
+            REQUIRE(calls[0].arguments.front() == "--yesno");
+
+            calls.clear();
+            ScopedCapturedRunner guard(calls, [](const ProcessCommand&) { return ProcessOutput{.exit_code = 1}; });
+            REQUIRE(portal::os::open_message_box("T", "M", MessageBoxType::YesNo, IconType::Info) ==
+                    MessageBoxButton::No);
+        }
+    }
+
+    GIVEN("kdialog answers a yes/no/cancel box")
+    {
+        auto answer = [&calls](const int exit_code)
+        {
+            calls.clear();
+            ScopedCapturedRunner guard(
+                    calls,
+                    [exit_code](const ProcessCommand&) { return ProcessOutput{.exit_code = exit_code}; }
+            );
+            return portal::os::open_message_box("T", "M", MessageBoxType::YesNoCancel, IconType::Warning);
+        };
+
+        THEN("0/1/2 map to Yes/No/Cancel")
+        {
+            REQUIRE(answer(0) == MessageBoxButton::Yes);
+            REQUIRE(answer(1) == MessageBoxButton::No);
+            REQUIRE(answer(2) == MessageBoxButton::Cancel);
+            REQUIRE(calls[0].executable == "kdialog");
+            REQUIRE(calls[0].arguments.front() == "--warningyesnocancel");
+        }
+    }
+
+    GIVEN("zenity reports the extra Cancel button on stdout")
+    {
+        ScopedCapturedRunner guard(
+                calls,
+                [](const ProcessCommand& command) -> std::optional<ProcessOutput>
+                {
+                    if (command.executable == "kdialog")
+                        return std::nullopt; // kdialog not installed
+                    return ProcessOutput{.exit_code = 1, .output = "Cancel"};
+                }
+        );
+
+        THEN("the box falls through to zenity and returns Cancel")
+        {
+            REQUIRE(portal::os::open_message_box("T", "M", MessageBoxType::YesNoCancel, IconType::Info) ==
+                    MessageBoxButton::Cancel);
+            REQUIRE(calls.size() == 2);
+            REQUIRE(calls[0].executable == "kdialog");
+            REQUIRE(calls[1].executable == "zenity");
+        }
+    }
+
+    GIVEN("no backend is available")
+    {
+        ScopedCapturedRunner guard(calls, [](const ProcessCommand&) { return std::nullopt; });
+
+        THEN("every backend is tried and a safe default is returned")
+        {
+            // No backend means "nothing was chosen": Cancel for anything with a
+            // choice, OK for a plain acknowledgement box.
+            REQUIRE(portal::os::open_message_box("T", "M", MessageBoxType::YesNo, IconType::Info) ==
+                    MessageBoxButton::Cancel);
+            REQUIRE(portal::os::open_message_box("T", "M", MessageBoxType::OK, IconType::Info) == MessageBoxButton::OK);
+
+            std::vector<std::string> tried;
+            for (const auto& call: calls)
+                tried.push_back(call.executable);
+            REQUIRE(tried ==
+                    std::vector<std::string>{"kdialog", "zenity", "xmessage", "kdialog", "zenity", "xmessage"});
+        }
+    }
+}
+
+SCENARIO("open_notification_popup prefers notify-send and falls back", "[unit][core][os]")
+{
+    std::vector<ProcessCommand> calls;
+
+    WHEN("notify-send succeeds")
+    {
+        ScopedRunner guard(calls, true);
+        const bool shown = portal::os::open_notification_popup("Title", "Body", IconType::Warning);
+
+        THEN("only notify-send runs, with the icon name and summary/body")
+        {
+            REQUIRE(shown);
+            REQUIRE(calls.size() == 1);
+            REQUIRE(calls[0].executable == "notify-send");
+            REQUIRE(calls[0].arguments == std::vector<std::string>{"--icon", "dialog-warning", "Title", "Body"});
+        }
+    }
+
+    WHEN("no notification daemon answers")
+    {
+        ScopedRunner guard(calls, false);
+        std::vector<ProcessCommand> box_calls;
+        ScopedCapturedRunner box_guard(box_calls, [](const ProcessCommand&) { return std::nullopt; });
+
+        const bool shown = portal::os::open_notification_popup("Title", "Body", IconType::Info);
+
+        THEN("it tries every notifier and then a message box")
+        {
+            REQUIRE(shown);
+            std::vector<std::string> tried;
+            for (const auto& call: calls)
+                tried.push_back(call.executable);
+            REQUIRE(tried == std::vector<std::string>{"notify-send", "kdialog", "zenity"});
+            REQUIRE_FALSE(box_calls.empty());
+        }
+    }
+}
+
+#endif
 
 // set() on Windows writes to the user registry rather than the current
 // process environment, so the round-trip below only holds on POSIX.
