@@ -16,7 +16,7 @@ import portal.core.log;
 
 namespace portal::filesystem
 {
-DECLARE_LOGGER("portal::filesystem")
+DECLARE_LOGGER("portal.filesystem")
 
 std::filesystem::path get_working_directory()
 {
