@@ -87,19 +87,28 @@ void shutdown()
     spdlog::shutdown();
 }
 
-Logger& get_logger(const std::string& logger_name)
+Logger& get_logger(const std::string_view logger_name) noexcept
 {
-    auto logger = std::dynamic_pointer_cast<Logger>(spdlog::get(logger_name));
-    if (logger != nullptr)
-        return *logger;
+    try
+    {
+        const std::string name{logger_name};
+        auto logger = std::dynamic_pointer_cast<Logger>(spdlog::get(name));
+        if (logger != nullptr)
+            return *logger;
 
-    const auto dist_sink = platform::get_platform_sinks("");
-    logger = std::make_shared<Logger>(logger_name, dist_sink);
-    spdlog::initialize_logger(logger);
-    return *logger;
+        const auto dist_sink = platform::get_platform_sinks("");
+        logger = std::make_shared<Logger>(name, dist_sink);
+        spdlog::initialize_logger(logger);
+        return *logger;
+    }
+    catch (...)
+    {
+        // Allocation or registration failed, logging must never throw so fall back to the default logger
+        return get_default_logger();
+    }
 }
 
-Logger& get_default_logger()
+Logger& get_default_logger() noexcept
 {
     const auto logger = std::dynamic_pointer_cast<Logger>(spdlog::default_logger());
     PORTAL_ASSERT(logger != nullptr, "Default logger is null");

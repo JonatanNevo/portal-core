@@ -54,7 +54,7 @@ public:
     Logger(const std::string& name, spdlog::sink_ptr sink_ptr);
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void log(LogLevel level, detail::log_format_string_t<Args...> format, Args&&... args)
+    PORTAL_FORCE_INLINE void log(LogLevel level, detail::log_format_string_t<Args...> format, Args&&... args) noexcept
     {
         // spdlog v2 when? :(
         const spdlog::source_loc spdlog_loc{
@@ -76,7 +76,7 @@ public:
             LogLevel level,
             const T& message,
             const std::source_location loc = std::source_location::current()
-    )
+    ) noexcept
     {
         // spdlog v2 when? :(
         const spdlog::source_loc spdlog_loc{loc.file_name(), static_cast<int>(loc.line()), loc.function_name()};
@@ -89,73 +89,73 @@ public:
     }
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void trace(detail::log_format_string_t<Args...> fmt, Args&&... args)
+    PORTAL_FORCE_INLINE void trace(detail::log_format_string_t<Args...> fmt, Args&&... args) noexcept
     {
         log(LogLevel::Trace, std::move(fmt), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void debug(detail::log_format_string_t<Args...> fmt, Args&&... args)
+    PORTAL_FORCE_INLINE void debug(detail::log_format_string_t<Args...> fmt, Args&&... args) noexcept
     {
         log(LogLevel::Debug, std::move(fmt), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void info(detail::log_format_string_t<Args...> fmt, Args&&... args)
+    PORTAL_FORCE_INLINE void info(detail::log_format_string_t<Args...> fmt, Args&&... args) noexcept
     {
         log(LogLevel::Info, std::move(fmt), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void warn(detail::log_format_string_t<Args...> fmt, Args&&... args)
+    PORTAL_FORCE_INLINE void warn(detail::log_format_string_t<Args...> fmt, Args&&... args) noexcept
     {
         log(LogLevel::Warn, std::move(fmt), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void error(detail::log_format_string_t<Args...> fmt, Args&&... args)
+    PORTAL_FORCE_INLINE void error(detail::log_format_string_t<Args...> fmt, Args&&... args) noexcept
     {
         log(LogLevel::Error, std::move(fmt), std::forward<Args>(args)...);
     }
 
     template<typename... Args>
-    PORTAL_FORCE_INLINE void fatal(detail::log_format_string_t<Args...> fmt, Args&&... args)
+    PORTAL_FORCE_INLINE void fatal(detail::log_format_string_t<Args...> fmt, Args&&... args) noexcept
     {
         log(LogLevel::Fatal, std::move(fmt), std::forward<Args>(args)...);
     }
 
     template<typename T>
-    PORTAL_FORCE_INLINE void trace(const T& msg, const std::source_location loc = std::source_location::current())
+    PORTAL_FORCE_INLINE void trace(const T& msg, const std::source_location loc = std::source_location::current()) noexcept
     {
         log(LogLevel::Trace, msg, loc);
     }
 
     template<typename T>
-    PORTAL_FORCE_INLINE void debug(const T& msg, const std::source_location loc = std::source_location::current())
+    PORTAL_FORCE_INLINE void debug(const T& msg, const std::source_location loc = std::source_location::current()) noexcept
     {
         log(LogLevel::Debug, msg, loc);
     }
 
     template<typename T>
-    PORTAL_FORCE_INLINE void info(const T& msg, const std::source_location loc = std::source_location::current())
+    PORTAL_FORCE_INLINE void info(const T& msg, const std::source_location loc = std::source_location::current()) noexcept
     {
         log(LogLevel::Info, msg, loc);
     }
 
     template<typename T>
-    PORTAL_FORCE_INLINE void warn(const T& msg, const std::source_location loc = std::source_location::current())
+    PORTAL_FORCE_INLINE void warn(const T& msg, const std::source_location loc = std::source_location::current()) noexcept
     {
         log(LogLevel::Warn, msg, loc);
     }
 
     template<typename T>
-    PORTAL_FORCE_INLINE void error(const T& msg, const std::source_location loc = std::source_location::current())
+    PORTAL_FORCE_INLINE void error(const T& msg, const std::source_location loc = std::source_location::current()) noexcept
     {
         log(LogLevel::Error, msg, loc);
     }
 
     template<typename T>
-    PORTAL_FORCE_INLINE void fatal(const T& msg, const std::source_location loc = std::source_location::current())
+    PORTAL_FORCE_INLINE void fatal(const T& msg, const std::source_location loc = std::source_location::current()) noexcept
     {
         log(LogLevel::Fatal, msg, loc);
     }
@@ -181,8 +181,8 @@ void init();
 void init(const Config& config);
 void shutdown();
 
-Logger& get_logger(const std::string& logger_name);
-Logger& get_default_logger();
+Logger& get_logger(std::string_view logger_name) noexcept;
+Logger& get_default_logger() noexcept;
 
 void set_default_log_level(LogLevel level, bool apply_to_all = true);
 

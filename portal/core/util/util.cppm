@@ -8,3 +8,4 @@ export module portal.core.util;
 export import :config;
 export import :type_traits;
 export import :variant;
+export import :timer;
