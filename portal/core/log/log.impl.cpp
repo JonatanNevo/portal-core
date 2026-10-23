@@ -13,11 +13,13 @@ module;
 
 #include "portal/core/log/types.h"
 #include "portal/core/log_macros.h"
+#include "portal/core/debug_macros.h"
 
 module portal.core.log;
 
 import portal.core.concurrency;
 import portal.core.log.platform;
+import portal.core.debug;
 
 namespace portal::log
 {
@@ -100,7 +102,7 @@ Logger& get_logger(const std::string& logger_name)
 Logger& get_default_logger()
 {
     const auto logger = std::dynamic_pointer_cast<Logger>(spdlog::default_logger());
-    // TODO: assert on empty default logger
+    PORTAL_ASSERT(logger != nullptr, "Default logger is null");
     return *logger;
 }
 

@@ -135,7 +135,8 @@ enum class MessageBoxType : uint8_t
     OK,
     OKCancel,
     YesNo,
-    YesNoCancel
+    YesNoCancel,
+    TryAgainContinueCancel
 };
 
 enum class IconType : uint8_t
@@ -157,7 +158,9 @@ enum class MessageBoxButton : uint8_t
     OK,
     Cancel,
     Yes,
-    No
+    No,
+    TryAgain,
+    Continue
 };
 
 /**
@@ -278,4 +281,11 @@ std::filesystem::path get_music_folder();
  * @return Absolute path to the video folder
  */
 std::filesystem::path get_video_folder();
+
+/**
+ * Checks whether a debugger is currently attached to this process.
+ *
+ * @return true if a debugger is attached, false otherwise (or if it cannot be determined)
+ */
+bool is_debugger_connected();
 } // namespace portal::os

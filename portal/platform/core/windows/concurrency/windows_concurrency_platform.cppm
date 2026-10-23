@@ -81,7 +81,6 @@ protected:
         }
     }
 
-    // TODO: use QOS_CLASS instead?
     static void set_priority(const ThreadPriority priority)
     {
         int priority_num = THREAD_PRIORITY_NORMAL;

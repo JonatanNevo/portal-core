@@ -10,4 +10,5 @@ export import portal.core.concurrency;
 export import portal.core.log;
 export import portal.core.filesystem;
 export import portal.core.os;
+export import portal.core.debug;
 

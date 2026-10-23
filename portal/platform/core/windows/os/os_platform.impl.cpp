@@ -266,4 +266,9 @@ std::expected<void, std::error_code> Environment::set(const std::string& name, c
     return std::unexpected{std::error_code{lOpenStatus, std::generic_category()}};
 }
 
+bool is_debugger_enabled()
+{
+    return IsDebuggerPresent() != FALSE;
+}
+
 } // namespace portal::os

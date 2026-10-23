@@ -10,6 +10,8 @@ module;
 #include <cstdlib>
 #include <pwd.h>
 #include <spawn.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -226,6 +228,18 @@ std::expected<void, std::error_code> Environment::set(const std::string& name, c
     }
 
     return {};
+}
+
+bool is_debugger_enabled()
+{
+    // Apple QA1361: a traced process has P_TRACED set in its kinfo_proc flags
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()};
+    kinfo_proc info{};
+    size_t size = sizeof(info);
+    if (sysctl(mib, std::size(mib), &info, &size, nullptr, 0) != 0)
+        return false;
+
+    return (info.kp_proc.p_flag & P_TRACED) != 0;
 }
 
 } // namespace portal::os

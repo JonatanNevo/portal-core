@@ -16,7 +16,7 @@ export import :formatters;
 
 import std;
 
-namespace portal::detail
+export namespace portal::detail
 {
 template<typename... Args>
 struct log_format_string // NOLINT (misc-use-internal-linkage)

@@ -345,13 +345,40 @@ namespace
 
     MessageBoxButton affirmative_button(const MessageBoxType type)
     {
-        return type == MessageBoxType::OK || type == MessageBoxType::OKCancel ? MessageBoxButton::OK
-                                                                              : MessageBoxButton::Yes;
+        switch (type)
+        {
+            case MessageBoxType::OK:
+            case MessageBoxType::OKCancel:
+                return MessageBoxButton::OK;
+            case MessageBoxType::TryAgainContinueCancel:
+                return MessageBoxButton::TryAgain;
+            case MessageBoxType::YesNo:
+            case MessageBoxType::YesNoCancel:
+                break;
+        }
+        return MessageBoxButton::Yes;
     }
 
     MessageBoxButton negative_button(const MessageBoxType type)
     {
         return type == MessageBoxType::YesNo ? MessageBoxButton::No : MessageBoxButton::Cancel;
+    }
+
+    // The middle button of a three-button box, or nullopt for every other type.
+    std::optional<MessageBoxButton> middle_button(const MessageBoxType type)
+    {
+        switch (type)
+        {
+            case MessageBoxType::YesNoCancel:
+                return MessageBoxButton::No;
+            case MessageBoxType::TryAgainContinueCancel:
+                return MessageBoxButton::Continue;
+            case MessageBoxType::OK:
+            case MessageBoxType::OKCancel:
+            case MessageBoxType::YesNo:
+                break;
+        }
+        return std::nullopt;
     }
 
     // All backends are launched through ProcessCommand with a real argv, so the
@@ -400,6 +427,16 @@ namespace
                 args.emplace_back(is_severe(icon) ? "--warningyesnocancel" : "--yesnocancel");
                 args.emplace_back(message);
                 break;
+            case MessageBoxType::TryAgainContinueCancel:
+                args.emplace_back(is_severe(icon) ? "--warningyesnocancel" : "--yesnocancel");
+                args.emplace_back(message);
+                args.emplace_back("--yes-label");
+                args.emplace_back("Try Again");
+                args.emplace_back("--no-label");
+                args.emplace_back("Continue");
+                args.emplace_back("--cancel-label");
+                args.emplace_back("Cancel");
+                break;
         }
 
         if (!title.empty())
@@ -421,9 +458,9 @@ namespace
         {
             return affirmative_button(type);
         }
-        if (type == MessageBoxType::YesNoCancel && result->exit_code == 1)
+        if (const auto middle = middle_button(type); middle && result->exit_code == 1)
         {
-            return MessageBoxButton::No;
+            return *middle;
         }
         return negative_button(type);
     }
@@ -470,6 +507,12 @@ namespace
                 args.emplace_back("--cancel-label=No");
                 args.emplace_back("--extra-button=Cancel");
                 break;
+            case MessageBoxType::TryAgainContinueCancel:
+                args.emplace_back("--question");
+                args.emplace_back("--ok-label=Try Again");
+                args.emplace_back("--cancel-label=Continue");
+                args.emplace_back("--extra-button=Cancel");
+                break;
         }
 
         args.emplace_back(std::format("--title={}", title));
@@ -488,9 +531,9 @@ namespace
         {
             return affirmative_button(type);
         }
-        if (type == MessageBoxType::YesNoCancel && result->output != "Cancel")
+        if (const auto middle = middle_button(type); middle && result->output != "Cancel")
         {
-            return MessageBoxButton::No;
+            return *middle;
         }
         return negative_button(type);
     }
@@ -505,7 +548,7 @@ namespace
         std::vector<std::string>& args = command.arguments;
         args.emplace_back("-center");
         args.emplace_back("-buttons");
-        // Button tags: 0 = affirmative, 1 = No, 2 = Cancel. xmessage exits with
+        // Button tags: 0 = affirmative, 1 = No/Continue, 2 = Cancel. xmessage exits with
         // the pressed button's tag (a window-manager close also exits 1).
         switch (type)
         {
@@ -520,6 +563,9 @@ namespace
                 break;
             case MessageBoxType::YesNoCancel:
                 args.emplace_back("Yes:0,No:1,Cancel:2");
+                break;
+            case MessageBoxType::TryAgainContinueCancel:
+                args.emplace_back("Try Again:0,Continue:1,Cancel:2");
                 break;
         }
         if (!title.empty())
@@ -539,9 +585,9 @@ namespace
         {
             return affirmative_button(type);
         }
-        if (type == MessageBoxType::YesNoCancel && result->exit_code == 1)
+        if (const auto middle = middle_button(type); middle && result->exit_code == 1)
         {
-            return MessageBoxButton::No;
+            return *middle;
         }
         return negative_button(type);
     }
@@ -924,6 +970,23 @@ std::filesystem::path get_music_folder()
 std::filesystem::path get_video_folder()
 {
     return get_platform_folders()["XDG_VIDEOS_DIR"];
+}
+
+bool is_debugger_connected()
+{
+    // A traced process reports a non-zero TracerPid in /proc/self/status
+    std::ifstream status("/proc/self/status");
+    std::string line;
+    while (std::getline(status, line))
+    {
+        constexpr std::string_view tracer_key = "TracerPid:";
+        if (line.starts_with(tracer_key))
+        {
+            const auto pid_start = line.find_first_not_of(" \t", tracer_key.size());
+            return pid_start != std::string::npos && line[pid_start] != '0';
+        }
+    }
+    return false;
 }
 
 } // namespace portal::os
