@@ -69,7 +69,7 @@ void init(const Config& config)
 
     spdlog::set_formatter(std::move(formatter));
 
-    auto dist_sink = platform::get_platform_sinks("");
+    const auto dist_sink = platform::get_platform_sinks("");
 
     const auto default_logger = std::make_shared<Logger>(std::string(config.default_logger_name), dist_sink);
     spdlog::initialize_logger(default_logger);
@@ -91,7 +91,7 @@ Logger& get_logger(const std::string& logger_name)
     if (logger != nullptr)
         return *logger;
 
-    auto dist_sink = platform::get_platform_sinks("");
+    const auto dist_sink = platform::get_platform_sinks("");
     logger = std::make_shared<Logger>(logger_name, dist_sink);
     spdlog::initialize_logger(logger);
     return *logger;

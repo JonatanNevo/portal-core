@@ -57,7 +57,7 @@ public:
             return *this;
 
         try_cancel_and_join();
-        thread = std::move(other.thread);simul
+        thread = std::move(other.thread);
         properties = std::move(other.properties);
         return *this;
     }
@@ -75,7 +75,8 @@ public:
     bool request_stop() noexcept { return thread.request_stop(); }
 
 protected:
-    template<typename F, typename... Args> // NOLINTNEXTLINE(cppcoreguidelines-missing-std-forward)
+    // NOLINTBEGIN(cppcoreguidelines-missing-std-forward, readability-redundant-parentheses)
+    template<typename F, typename... Args>
     static auto make_callable(F&& f, Args&&... args)
     {
         if constexpr (std::is_invocable_v<std::decay_t<F>, std::stop_token, Args...>)
@@ -102,6 +103,7 @@ protected:
             };
         }
     }
+    // NOLINTEND(cppcoreguidelines-missing-std-forward, readability-redundant-parentheses)
 
     void try_cancel_and_join()
     {
